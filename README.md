@@ -99,10 +99,12 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - mode will progress: hold -> fill -> hold -> generate -> hold -> fill
   
   }
+  
 7. if (generation == two way) {
   - mode will progress: fill -> hold -> generate -> sluice -> hold -> generate -> fill
   
   }
+  
 8. Different modes will affect the behaviour differently:
    
    i. Holding:
@@ -130,4 +132,4 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - flowSluices = function of (headDifference) - sluices function
   - wettedArea = function of bathymettry/mesh - mesh function
   - lagoonWaterLevel(i+1) = lagoonWaterLevel(i) + (flowTurbines + flowSluices + externalFlows)dt/wettedArea
-       - if wetted area drops to zero (the lagoon dries out) the lagoon water level stays at 0 until the tide begins to rise again
+    - if wetted area drops to zero (the lagoon dries out) the lagoon water level stays at 0 until the tide begins to rise again
