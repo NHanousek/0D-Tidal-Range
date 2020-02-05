@@ -37,12 +37,18 @@ GA_Config::GA_Config(double crossover, double mutation, int population, int Mode
 	variable xRate(crossover, 0, "Crossover rate", "[-]");
 	variable mRate(mutation, 0, "Mutation Rate", "[-]");
 <<<<<<< HEAD
+<<<<<<< HEAD
 	variable pop(population, 0, "Population size", "[-]");
 	variable mode(Mode, 0, "Genetic Algorithm Mode", "[-]");
 }
 =======
+=======
+>>>>>>> b940abbbc5f6cc2686b03d91d741ec72c65abd39
 	variable pop(population, 0, "Population size", "[-]")
 	mode(Mode)
 
 }
+<<<<<<< HEAD
+>>>>>>> b940abbbc5f6cc2686b03d91d741ec72c65abd39
+=======
 >>>>>>> b940abbbc5f6cc2686b03d91d741ec72c65abd39
