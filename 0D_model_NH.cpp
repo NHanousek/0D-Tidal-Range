@@ -11,18 +11,33 @@
 using namespace std;
 
 
-//Printers
+//Printers to console and to string
 void variable::printVariable() {
 	cout << "<" << name << "> =" << value << units << " MODE <"<<mode<<">"<< endl;
 };
-
+string variable::strVariable() {
+	return "<" + name + "> =" + value + units + " MODE <" + mode + ">";
+}
 void variable::setValue(double* newValue) {
 	if (mode == 0) {
 		cout << "ATTEMPTING TO EDIT FIXED VARIABLE <" << name << ">" << endl;
 	}
 	value = *newValue;
 }
-
+string variable::strMode() {
+	string mstring;
+	switch (mode) {
+		case 0:
+			mstring = "a Constant Input"; break;
+		case 1:
+			mstring = "a Flexible Input"; break;
+		case 2:
+			mstring = "an Output"; break;
+		default:
+			mstring = "UNDEFINED"; break;
+	}
+	return  "<" + name + "> variable mode is " + mstring;
+}
 void variable::printMode() {
 	string mstring;
 	switch (mode) {

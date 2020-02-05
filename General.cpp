@@ -17,20 +17,32 @@ int ReadData(string* Input_Fname) {
 	ifstream Lag_input(Lag_name);
 
 	if (GA_input.is_open() == false) {
-		cout << "Unable to open <" << GA_name << endl;
+		cout << "Unable to open <" << GA_name << ">" << endl;
 		if (Lag_input.is_open() == false) {
-			cout << "Unable to open <" << Lag_name << endl;
+			cout << "Unable to open <" << Lag_name << ">" << endl;
 			return 0;
 		}
 		return 0;
+	} elseif (Lag_input.is_open() == false) {
+		cout << "Unable to open <" << Lag_name << ">" << endl;
+		return 0;
 	}
+
+
+	cout << "Reading: <" << GA_Name << "> and <" << Lag_name << ">" << endl;
 
 };
 
 GA_Config::GA_Config(double crossover, double mutation, int population, int Mode) {
 	variable xRate(crossover, 0, "Crossover rate", "[-]");
 	variable mRate(mutation, 0, "Mutation Rate", "[-]");
-	variable pop(population, 0, "Population size", "[-]") 
+<<<<<<< HEAD
+	variable pop(population, 0, "Population size", "[-]");
+	variable mode(Mode, 0, "Genetic Algorithm Mode", "[-]");
+}
+=======
+	variable pop(population, 0, "Population size", "[-]")
 	mode(Mode)
 
 }
+>>>>>>> b940abbbc5f6cc2686b03d91d741ec72c65abd39
