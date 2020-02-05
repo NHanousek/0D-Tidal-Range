@@ -91,19 +91,20 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   
     iii. Initialise turbines
   
-  iv. Initialise external water level
+    iv. Initialise external water level
+  
 3. check input parameters for bad inputs
 4. initialise results parameters
 5. Initialise modeling
 6. if (generation == ebb only) {
   - mode will progress: hold -> fill -> hold -> generate -> hold -> fill
   
-  }
+        }
   
 7. if (generation == two way) {
   - mode will progress: fill -> hold -> generate -> sluice -> hold -> generate -> fill
   
-  }
+        }
   
 8. Different modes will affect the behaviour differently:
    
