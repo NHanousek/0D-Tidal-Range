@@ -14,49 +14,61 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 ### What the model should contain:
 - [ ] Class Lagoon, 
    - Containing:
-   - [ ] All the basic info about the lagoon itself
+   - [x] All the basic info about the lagoon itself
    - Functions:
-   - [ ] Constructor that takes filename as input
+   - [x] Constructor that takes filename as input
+   - [x] Constructor that takes no inputs, gives error lagoon.
+   - [x] Sluice gate flow from orifice equation
    - [ ] (Genetic) functions to modify parameters based on genetic algorithm outputs
    
-- [ ] Class Mesh, read directly from a telemac .t3s file ideally
+- [x] Class Mesh, read directly from a telemac .t3s file ideally
    - Containing:
-   - [ ] string title or info: give some basic info abut it
-   - [ ] int nPoints: Number of points
-   - [ ] int nElements: Number of elements
-   - [ ] array of triple doubles xyz: positions of all the points in 3D
-   - [ ] array of triple ints neighbourhod: the neighbour list for all the elements
+   - [x] string title or info: give some basic info abut it
+   - [x] int nPoints: Number of points
+   - [x] int nElements: Number of elements
+   - [x] array of triple doubles xyz: positions of all the points in 3D
+   - [x] array of triple ints neighbourhod: the neighbour list for all the elements
    - Functions:
-   - [ ] Constructor that takes filename as input
-   - [ ] Function that takes head difference and returns wetted area
-   
-- [ ] Class External Water Level, read from a telemac .ts1 file
+   - [x] Constructor that takes filename as input
+   - [x] Constructor that takes no inputs
+ 
+ - [ ] Class schemeArea, wetted area and water levels for the lagon/barrage
    - Containing:
-  - [ ] string title: give some basic title/location
-  - [ ] string source: Where is the root data from/validated against
-  - [ ] int nReadings: number of readings
-  - [ ] double array time: time points for the data
-  - [ ] double array externalWaterLevel: water levels
+   - [x] int number of points
+   - [x] array of doubles Levels
+   - [x] array of doubles Areas
+   - Functions:
+   - [ ] Constructor that takes in a Lagoon and a Mesh
+   - [ ] Function that takes water level and returns wetted area
+   
+- [x] Class External Water Level, read from a telemac .ts1 file
+   - Containing:
+  - [x] string title: give some basic title/location
+  - [x] string source: Where is the root data from/validated against
+  - [x] int nReadings: number of readings
+  - [x] double array time: time points for the data
+  - [x] double array externalWaterLevel: water levels
   - Functions:
-  - [ ] Constructor that takes filename as input
+  - [x] Constructor that takes filename as input
+  - [x] Constructor that makes a blank error object, from no inputs
   
 - [ ] Class Turbines, read from a HQPTurbines file
    - Containing:
-  - [ ] double originalDiameter: original diameter of turbine
-  - [ ] double diameterTurbine: diameter of a single turbine
-  - [ ] double areaTurbine: total area of turbines
-  - [ ] string title: some kind of title infrmation
-  - [ ] int nPoints: number of points in the readings
-  - [ ] doube array headDifference: Head differences
-  - [ ] doube array powerOutput: Power output at head difference
-  - [ ] doube array flowrate: flow rate at head difference
-  - [ ] double coeffDischarge: coefficient of discharge of the turbines when filling
+  - [x] double originalDiameter: original diameter of turbine
+  - [x] double diameterTurbine: diameter of a single turbine
+  - [x] double areaTurbine: total area of turbines
+  - [x] string title: some kind of title infrmation
+  - [x] int nPoints: number of points in the readings, one for head-power and one for head-flow
+  - [x] double array headDifference: Head differences, one for head-power and one for head-flow
+  - [x] double array powerOutput: Power output at head difference
+  - [x] double array flowrate: flow rate at head difference
+  - [x] double coeffDischarge: coefficient of discharge of the turbines when filling
   - Functions:
   - [ ] Constructor that takes filename and Lagoon as input
   - [ ] Function that returns flowRate and powerOutput for a given headDifference, filling or generating
   - [ ] (Genetic) functions to modify parameters based on genetic algorithm outputs
   
-- [ ] Class Sluices, built from lagoon info
+- [x] Class Sluices, built from lagoon info **DECIDED THIS CLASS IS UNNECESSARY**
    - Containing:
   - [ ] double areaSluices: the total area of the cluices
   - [ ] double coeffDischarge: coefficient of discharge of the sluices
