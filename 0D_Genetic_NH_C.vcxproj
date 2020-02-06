@@ -151,7 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="0D_Genetic_NH_C.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="0D_model_NH.cpp" />
     <ClCompile Include="General.cpp" />
     <ClCompile Include="Genetic.cpp" />
