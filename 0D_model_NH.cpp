@@ -14,7 +14,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 	ifstream lagoonFile;
 	lagoonFile.open(fileName);
 	if (lagoonFile.is_open()) {
-		string tmp;
+		string tmp = "Start";
 		/*
 		enum argName {
 			simTime,
@@ -42,7 +42,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 		};
 		*/
 		getline(lagoonFile, title);
-		while (tmp != "end" && tmp != "End" && tmp != "END") {
+		while (tmp != "End") {
 			lagoonFile >> tmp;
 
 			//this may be the biggest nastiest if else I've ever made
@@ -93,15 +93,16 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 			}
 			else if (tmp == "turbineDiameter(m)=") {
 				lagoonFile >> turbineDiameter;
+				turbineArea = 0.25 * Pi * turbineDiameter * turbineDiameter;
 			}
 			else if (tmp == "turbineArea(m2)=") {
 				lagoonFile >> turbineArea;
 			}
-			else if (tmp == "headDiffMax(m)=") {
-				lagoonFile >> headDiffMax;
+			else if (tmp == "headDiffStart(m)=") {
+				lagoonFile >> headDiffStart;
 			}
-			else if (tmp == "headDiffMim(m)=") {
-				lagoonFile >> headDiffMin;
+			else if (tmp == "headDiffEnd(m)=") {
+				lagoonFile >> headDiffEnd;
 			}
 			else if (tmp == "waterLevelMax(m)=") {
 				lagoonFile >> waterLevelMax;
@@ -126,12 +127,13 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				lagoonFile >> percentEff;
 				generatorEfficiency = percentEff / 100;
 			}
-			else {
-				string tmp2;
-				lagoonFile >> tmp2;
-				cout << "Unrecognised Lagoon Parameter [" << tmp << "] = " << tmp2 << " read." << endl;
+			else if (tmp == "End") {
+				cout << "End of Lagoon File." << endl;
 			}
+			else {
 
+				cout << "Unrecognised Lagoon Parameter [" << tmp << "] read." << endl;
+			}
 
 			/*switch (tmp) {
 
@@ -172,13 +174,14 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 	}	
 }
 tidalRangeScheme::tidalRangeScheme() {
+	cout << endl << "BLANK TIDAL RANGE SCHEME CLASS CREATED" << endl;
 	source = title = "ERROR";
 	simTime = 0.0;
 	timeStep.x = timeStep.y = timeStep.z = 0.0;
 	timeAdjust.x = timeAdjust.y = timeAdjust.z = 0.0;
 	schemeType = turbineType = numberTurbines = numWaterLevelPoints= 0;
-	areaSluices = turbineDiameter = turbineArea = headDiffMax = 0;
-	headDiffMin = waterLevelMax = waterLevelMin = generatorEfficiency = 0;
+	areaSluices = turbineDiameter = turbineArea = headDiffStart = 0;
+	headDiffEnd = waterLevelMax = waterLevelMin = generatorEfficiency = 0;
 	sluiceCoefQ = turbineCoefQ = 0;
 }
 double tidalRangeScheme::sluiceFlowRate(const double& headDifference) {
@@ -202,10 +205,10 @@ t3sMesh::t3sMesh(const string& fileName) {
 				meshFile >> numberElements;
 			}
 		}
-		for (int i = 1; i <= numberNodes; i++) {
+		for (int i = 0; i < numberNodes; i++) {
 			meshFile >> nodePoints[i].x >> nodePoints[i].y >> tmp >> tmp >> nodePoints[i].z;
 		}
-		for (int j = 1; j <= numberElements; j++) {
+		for (int j = 0; j < numberElements; j++) {
 			meshFile >> neighbourhood[j].x >> neighbourhood[j].y >> neighbourhood[j].z;
 			elementArea[j] = areaTriangle(nodePoints[neighbourhood[j].x], nodePoints[neighbourhood[j].y], nodePoints[neighbourhood[j].z]);
 			elementHeight[j] = meanHeight(nodePoints[neighbourhood[j].x], nodePoints[neighbourhood[j].y], nodePoints[neighbourhood[j].z]);
@@ -218,6 +221,7 @@ t3sMesh::t3sMesh(const string& fileName) {
 	}
 }
 t3sMesh::t3sMesh() {
+	cout << endl << "BLANK MESH CLASS CREATED" << endl;
 	title = "ERROR";
 	numberNodes = numberElements = 0;
 	nodePoints[0].x = nodePoints[0].y = nodePoints[0].z = 0;
@@ -267,12 +271,18 @@ externalWaterLevel::externalWaterLevel(const string& fileName) {
 	}
 }
 externalWaterLevel::externalWaterLevel() {
+	cout << endl << "BLANK EXTERNAL WATER LEVEL CLASS CREATED" << endl;
 	title = sourceFile = "ERROR";
 	numberReadings = 0;
 	xUTM = yUTM = dt = time[0] = level[0] = 0.0;
 }
 double externalWaterLevel::getExternalWL(const double& timeNow) {
-
+	for (int i = 0; i <= (int)time.size()-1; i++) {
+		if (time[i] <= timeNow <= time[i + 1]) {
+			return interpolate(time[i], timeNow, time[i + 1], level[i], level[i + 1]);
+		}
+	}
+	return 999;
 }
 
 turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
@@ -284,38 +294,46 @@ turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 		HQPTurbines >> tmp;
 		if (tmp == "OriginalDiameter(m)") {
 			HQPTurbines >> originalDiameter;
+			// scale factor for original turbines to model turbines
+			double scaleFactor = (trs.turbineDiameter / originalDiameter) * (trs.turbineDiameter / originalDiameter);
+			double tmpD; // temporary variable to use when scaling
+			// this reader allows you to give the power and flow in either order
 			HQPTurbines >> tmp;
 			if (tmp == "KHP") {
-				//Need to apply scaling here VVV
 				HQPTurbines >> numHPPoints;
 				getline(HQPTurbines, tmp);
 				for (int i = 1; i <= numHPPoints; i++) {
-					HQPTurbines >> tmp >> powerHeadDifference[i] >> powerOutput[i];
+					HQPTurbines >> tmp >> powerHeadDifference[i] >>tmpD;
+					powerOutput[i] = tmpD * scaleFactor;
 				}
 			}
 			else if (tmp == "KHQ") {
 				HQPTurbines >> numHQPoints;
 				getline(HQPTurbines, tmp);
 				for (int j = 1; j <= numHQPoints; j++) {
-					HQPTurbines >> tmp >> powerHeadDifference[j] >> powerOutput[j];
+					HQPTurbines >> tmp >> powerHeadDifference[j] >> tmpD;
+					flowRate[j] = tmpD * scaleFactor;
 				}
 			}
 			else {
 				cout << "Invalid turbine curve parameter (not KHP or KHQ)" << endl;
 			}
-			getline(HQPTurbines, tmp);
+			getline(HQPTurbines, tmp); // reads the row of asterisks
+			HQPTurbines >> tmp;
 			if (tmp == "KHP") {
 				HQPTurbines >> numHPPoints;
 				getline(HQPTurbines, tmp);
 				for (int i = 1; i <= numHPPoints; i++) {
-					HQPTurbines >> tmp >> powerHeadDifference[i] >> powerOutput[i];
+					HQPTurbines >> tmp >> powerHeadDifference[i] >> tmpD;
+					powerOutput[i] = tmpD * scaleFactor;
 				}
 			}
 			else if (tmp == "KHQ") {
 				HQPTurbines >> numHQPoints;
 				getline(HQPTurbines, tmp);
 				for (int j = 1; j <= numHQPoints; j++) {
-					HQPTurbines >> tmp >> powerHeadDifference[j] >> powerOutput[j];
+					HQPTurbines >> tmp >> powerHeadDifference[j] >> tmpD;
+					flowRate[j] = tmpD * scaleFactor;
 				}
 			}
 			else {
@@ -327,6 +345,9 @@ turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 			cout << "Aborting model, please use format similar to:" << endl
 				<< "OriginalDiameter(m) 9.0" << endl
 				<< "KHP 104" << endl << "No	Head(m)	Power(MW)" << endl
+				<< "Data......." << endl
+				<< "******************" << endl
+				<< "KHQ 104" << endl << "No	Head(m)	Q (m3/s)" << endl
 				<< "Data......." << endl;
 		}
 	}
@@ -336,20 +357,271 @@ turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 	}
 }
 turbines::turbines() {
+	cout << endl << "BLANK TURBINE CLASS CREATED" << endl;
 	title = "ERROR";
 	originalDiameter = turbineDiameter = totalArea = coeffDischarge = 0;
 	powerHeadDifference[0] = powerOutput[0] = flowHeadDifference[0] = flowRate[0] = 0;
 	numHPPoints = numHQPoints = 0;
 }
 double turbines::getFlowRate(const double& headDifference, const tidalRangeScheme& trs) {
-
+	for (int i = 0; i <= numHQPoints; i++) {
+		if (flowHeadDifference[i] <= headDifference && headDifference <= flowHeadDifference[i + 1]) {
+			return interpolate(flowHeadDifference[i], headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
+		}
+	}
+	return 999;
 }
 double turbines::getPowerOutput(const double& headDifference, const tidalRangeScheme& trs) {
-
+	for (int i = 0; i <= numHPPoints; i++) {
+		if (powerHeadDifference[i] <= headDifference && headDifference <= powerHeadDifference[i + 1]) {
+			return interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]);
+		}
+	}
+	return 999;
 }
 double turbines::getFillingFlow(const double& headDifference) {
-
+	return orificeFlow(coeffDischarge, headDifference, totalArea);
 }
+
+schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
+	title = trs.source;
+	lagoonTitle = trs.title;
+	meshTitle = mesh.title;
+	numPoints = trs.numWaterLevelPoints;
+	//initialise the arrays
+	//assumes that the waterLevelMin is below the lowest point of bathymetry inside the trs
+	area[0] = 0.0;
+	level[0] = trs.waterLevelMin;
+	if (title == "ERROR" || lagoonTitle == "ERROR" || meshTitle == "ERROR") {
+		cout << "Scheme Area Class created with errors" << endl;
+	}
+	double diffLevel = (trs.waterLevelMax - trs.waterLevelMin) / numPoints;
+	//loop through the height points
+	for (int i = 1; i <= numPoints; i++) {
+		area[i] = area[i-1];
+		level[i] = level[i] + diffLevel;
+		//loop through the elements
+		for (int j = 0; j < mesh.numberElements ; j++) {
+			if (level[i-1] < mesh.elementHeight[j] && mesh.elementHeight[j] <= level[i]) {
+				area[i] += mesh.elementArea[j];
+			}
+		}
+	}
+}
+
+double schemeArea::getWettedArea(const double& internalWaterLevel) {
+	if (internalWaterLevel < level[0]) {
+		return 0; // if the desired level is below the bed level of the tidal range scheme
+	}
+	for (int i = 0; i <= numPoints; i++) {
+		if (level[i] <= internalWaterLevel <= level[i + 1]) {
+			return interpolate(level[i], internalWaterLevel, level[i + 1], area[i], area[i + 1]);
+		}
+	}
+	cout << "Lagoon potentially overfilled" << endl;
+	return area.back(); //if too large return top size;
+}
+
+results::results(const tidalRangeScheme& trs) {
+	title = "REsults from Tidal Range Scheme " + trs.title;
+	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
+	modelTimeHr[0] = 0;
+	upstreamWaterLevel[0] = 0;
+	downstreamWaterLevel[0] = 0;
+	headDifference[0] = 0;
+	wettedArea[0] = 0;
+	powerOutput[0] = 0;
+	powerGenerated[0] = 0;
+	turbineFlow[0] = 0;
+	sluiceFlow[0] = 0;
+	lagoonMode[0] = 0;
+}
+results::results(const tidalRangeScheme& trs, const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
+	title = "REsults from Tidal Range Scheme " + trs.title;
+	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
+	modelTimeHr[0] = time;
+	upstreamWaterLevel[0] = upstreamWL;
+	downstreamWaterLevel[0] = downstreamWL;
+	headDifference[0] = headDiff;
+	wettedArea[0] = wetArea;
+	powerOutput[0] = powerOut;
+	powerGenerated[0] = powerOut;
+	turbineFlow[0] = turbineQ;
+	sluiceFlow[0] = sluiceQ;
+	lagoonMode[0] = trsMode;
+}
+
+void results::addResults(const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
+	modelTimeHr.push_back(time);
+	upstreamWaterLevel.push_back(upstreamWL);
+	downstreamWaterLevel.push_back(downstreamWL);
+	headDifference.push_back(headDiff);
+	wettedArea.push_back(wetArea);
+	powerOutput.push_back(powerOut);
+	powerGenerated.push_back(powerGenerated.back() + powerOut);
+	turbineFlow.push_back(turbineQ);
+	sluiceFlow.push_back(sluiceQ);
+	lagoonMode.push_back(trsMode);
+}
+string results::header() {
+	return title + "\n" + info;
+}
+string results::line(const int& i) {
+	string output;
+	output += to_string(modelTimeHr[i]) +"\t";
+	output += to_string(upstreamWaterLevel[i]) + "\t";
+	output += to_string(downstreamWaterLevel[i]) + "\t";
+	output += to_string(headDifference[i]) + "\t";
+	output += to_string(wettedArea[i]) + "\t";
+	output += to_string(powerOutput[i]) + "\t";
+	output += to_string(powerGenerated[i]) + "\t";
+	output += to_string(turbineFlow[i]) + "\t";
+	output += to_string(sluiceFlow[i]) + "\t";
+	output += to_string(lagoonMode[i]);
+	return output;
+}
+void results::line(const int& i, const string& fileName) {
+	ofstream outFile;
+	outFile.open(fileName);
+	if (outFile.is_open()) {
+		outFile << line(i);
+	}
+	else {
+		cout << "Output file [" << fileName << "] could not be opened..." << endl;
+	}
+}
+void results::printFull() {
+	cout << header();
+	for (int i = 0; i <= modelTimeHr.size(); i++) {
+		cout << line(i);
+	}
+}
+void results::printFull(const string& fileName) {
+	ofstream outFile;
+	outFile.open(fileName);
+	if (outFile.is_open()) {
+		outFile << header();
+		for (int i = 0; i <= modelTimeHr.size(); i++) {
+			outFile << line(i);
+		}
+	}
+	else {
+		cout << "Output file [" << fileName << "] could not be opened..." << endl;
+	}
+}
+
+modelConfig::modelConfig(const string& configFileName) {
+	string tmp;
+	ifstream cfgFile;
+	cfgFile.open(configFileName);
+	if (cfgFile.is_open()) {
+		getline(cfgFile, tmp);
+		cout << "Loading " << tmp << endl;
+		cfgFile >> tmp;
+		while (tmp != "End") {
+			if (tmp == "Lagoon:") {
+				cfgFile >> LagoonFileName;
+			}
+			else if (tmp == "Mesh:") {
+				cfgFile >> meshFileName;
+			}
+			else if (tmp == "ExternalWaterLevel:") {
+				cfgFile >> externalWaterLevelFileName;
+			}
+			else if (tmp == "Turbines:") {
+				cfgFile >> turbinesFileName;
+			}
+			else if (tmp == "Results:") {
+				cfgFile >> resultsFileName;
+			}
+			else {
+				cout << "Unexpected file name read from config file..." << endl;
+			}
+			cfgFile >> tmp;
+		}
+		cfgFile.close();
+	}
+	else {
+		cout << "Unable to open config file [" << configFileName << "]." << endl;
+	}
+}
+
+int nextMode(const tidalRangeScheme& trs, const results& previous) {
+	if (trs.schemeType == 1) {
+		// Ebb only - No Pumping
+		switch (previous.lagoonMode.back()) {
+			case 1: //Filling/sluicing
+				if (previous.headDifference.back() > 0) {
+					return 2;
+				}
+				else {
+					return 1;
+				}
+				break;
+			case 2: //Holding
+				if (previous.headDifference.back() >= trs.headDiffStart) {	
+					return 3;	
+				}
+				else if (previous.headDifference.back() < 0) { 
+					return 1;	
+				}
+				else {
+					return 2;	
+				}
+				break;
+			case 3: //Generating
+				if (previous.headDifference.back() <= trs.headDiffEnd) {
+					return 2;
+				}
+				else {
+					return 3;
+				}
+				break;
+			default: //Error
+				cout << "Error with Tidal Range Scheme Mode..." << endl;
+				return 0;
+				break;
+		}
+	}
+	else if (trs.schemeType == 2) {
+		// Two-way generation - No Pumping
+		switch (previous.lagoonMode.back()) {
+		case 1: //Filling/sluicing
+			if (-0.01 <= previous.headDifference.back() <= 0.01) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+			break;
+		case 2: //Holding
+			if (absolute(previous.headDifference.back()) >= trs.headDiffStart) {
+				return 3; 
+			}
+			else {
+				return 2;
+			}
+			break;
+		case 3: //Generating
+			if (absolute(previous.headDifference.back() <= trs.headDiffEnd)) {
+				return 1;
+			}
+			else {
+				return 3;
+			}
+			break;
+		default: //Error
+			cout << "Error with Tidal Range Scheme Mode..." << endl;
+			return 0;
+			break;
+		}
+	}
+	else {
+		cout << "Error with Tidal Range Scheme Type..." << endl;
+		return 0;
+	}
+}
+
 //Everything below here is kept for reference only
 /*
 //Printers to console and to string

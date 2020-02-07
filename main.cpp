@@ -2,23 +2,40 @@
 //
 
 #include <iostream>
-#include "0D_model_NH.h"
-#include "Genetic.h"
 #include <string>
-#include <array>
+#include "0D_model_NH.h"
 
 using namespace std;
 int main()
 {
-	variable test(2.5, 1, "test_name", "m/s");
-	
-	test.printVariable();
-	test.printMode();
-	
-	double temp = 3.75;
-	
-	test.setValue( &temp );
-	test.printVariable();
+	string cfgName = "BarraCUDA.txt";
+
+	modelConfig config = modelConfig(cfgName);
+
+	cout << "Config read"<< endl;
+	// lets test each of the classes out in turn.
+	//tidalRangeScheme
+	tidalRangeScheme TRS = tidalRangeScheme(config.LagoonFileName);
+	cout << "lagoon read" << endl;
+
+	//t3sMesh
+	t3sMesh mesh = t3sMesh(config.meshFileName);
+	cout << "mesh read" << endl;
+
+	//externalWaterLevel
+	externalWaterLevel downstreamWL = externalWaterLevel(config.externalWaterLevelFileName);
+	cout << "water level read" << endl;
+
+	//turbines
+	turbines TRBN = turbines(TRS, config.turbinesFileName);
+	cout << "turbines read" << endl;
+
+	//schemeArea
+	schemeArea Area = schemeArea(TRS, mesh);
+	cout << "area read" << endl;
+
+	//results;
+	results modelResults = results(TRS);
 
 	cout << "All done." << endl;
 	return 0;

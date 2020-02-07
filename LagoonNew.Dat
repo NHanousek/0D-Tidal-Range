@@ -1,0 +1,18 @@
+Title Line Here
+simTime(hrs)= 180
+timeStep(sec)= 300
+timeAdjust(min)= 10
+schemeType(k)= 1
+turbineType(k)= 1
+numberTurbines(int)= 1
+areaSluices(m2)= 2
+turbineDiameter(m)= 1.25
+headDiffStart(m)= 2.5
+headDiffEnd(m)=	1.25
+waterLevelMax(m)= -2
+waterLevelMin(m)= 8
+numWaterLevelPoints(int)= 100
+sluiceCoefQ(0-1)= 0.95
+turbineCoefQ(0-1)= 0.95
+generatorEfficiency(%)= 95
+End
