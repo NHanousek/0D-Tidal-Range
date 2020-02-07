@@ -5,11 +5,24 @@
 ### Origins
 Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project.
 
-### Note:
+### Notes:
   1. This model is mainly a learning project for me, testing the varius bits aong the way. Probably has at least six months before its anywhere near the existing model.
   2. I mainly work on it when i get frustrated at the existing models...
   3. I use the words Barrage and lagoon interchangeably a lot here, realistically it shouldn't make a huge difference at this stage.
-  
+
+## Principles:
+  1. Flow from upstream to downstream is positive.
+  2. Flow calcs to use metres and seconds. Hours and minutes only for user input and output
+  3. If you do it more than twice, make it a function (and really if you do it more than once).
+  4. Try and use consistent patterns and nomenclature between classes and functions. 
+                
+                eg. input files always always given as:
+                
+                const string& fileName; // when called in the function input
+                fileName= Lagoon.txt;   // when declared in the main program.
+                
+  5. Next principle
+
 ## Plan:
 ### What the model should contain:
 - [ ] Class Lagoon, 
@@ -63,9 +76,11 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - [x] double array powerOutput: Power output at head difference
   - [x] double array flowrate: flow rate at head difference
   - [x] double coeffDischarge: coefficient of discharge of the turbines when filling
+  - [ ] double head limit: ?
+  - [ ] double flow rate limit ?
   - Functions:
-  - [ ] Constructor that takes filename and Lagoon as input
-  - [ ] Function that returns flowRate and powerOutput for a given headDifference, filling or generating
+  - [x] Constructor that takes filename and Lagoon as input
+  - [x] Function that returns flowRate and powerOutput for a given headDifference, filling or generating
   - [ ] (Genetic) functions to modify parameters based on genetic algorithm outputs
   
 - [x] Class Sluices, built from lagoon info **DECIDED THIS CLASS IS UNNECESSARY**
@@ -78,19 +93,21 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   
  - [ ] Class Results, the working outputs of the model
     - Containing:
-   - [ ] double array time: Time of model
-   - [ ] double array lagoonWaterLevel
-   - [ ] double array externalWaterLevel
-   - [ ] double array lagoonWettedArea
-   - [ ] double array powerGenerated
-   - [ ] double array turbineFlow
-   - [ ] double array sluiceFlow
-   - [ ] int array lagoonMode
-   - [ ] double array cumulativeElectricity
+   - [x] double array time: Time of model
+   - [x] double array lagoonWaterLevel
+   - [x] double array externalWaterLevel
+   - [x] double array lagoonWettedArea
+   - [x] double array powerGenerated
+   - [x] double array turbineFlow
+   - [x] double array sluiceFlow
+   - [x] int array lagoonMode
+   - [x] double array cumulativeElectricity (powerGenerated)
     - Functions:
    - [ ] Default constructor
-   - [ ] printing to console
-   - [ ] printing to file
+   - [ ] line as string
+   - [ ] heading as string
+   - [ ] printing to console, one line or full results
+   - [ ] printing to file, one line or full results
    - [ ] functions to add new data as it is calculated
  
 ## Approximate flow of model
