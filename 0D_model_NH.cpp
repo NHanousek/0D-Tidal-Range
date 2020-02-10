@@ -205,14 +205,20 @@ t3sMesh::t3sMesh(const string& fileName) {
 				meshFile >> numberElements;
 			}
 		}
+		tdouble3 tmptd3; //temp triple double for loading in coordinates
 		for (int i = 0; i < numberNodes; i++) {
-			meshFile >> nodePoints[i].x >> nodePoints[i].y >> tmp >> tmp >> nodePoints[i].z;
+			meshFile >> tmptd3.x >> tmptd3.y >> tmp >> tmp >> tmptd3.z;
+			nodePoints.push_back(tmptd3);
 		}
-		for (int j = 0; j < numberElements; j++) {
-			meshFile >> neighbourhood[j].x >> neighbourhood[j].y >> neighbourhood[j].z;
-			elementArea[j] = areaTriangle(nodePoints[neighbourhood[j].x], nodePoints[neighbourhood[j].y], nodePoints[neighbourhood[j].z]);
-			elementHeight[j] = meanHeight(nodePoints[neighbourhood[j].x], nodePoints[neighbourhood[j].y], nodePoints[neighbourhood[j].z]);
+		tmptd3.~tdouble3();
+		tint3 tmpti3; //temp triple int for loading neighbour list
+		for (int j = 0; j <= numberElements; j++) {
+			meshFile >> tmpti3.x >> tmpti3.y >> tmpti3.z;
+			neighbourhood.push_back(tmpti3);
+			elementArea.push_back(areaTriangle(nodePoints[neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].z - 1]));
+			elementHeight.push_back(meanHeight(nodePoints[neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].x - 1]));
 		}
+		tmpti3.~tint3();
 		meshFile.close();
 	}
 	else {
@@ -249,17 +255,18 @@ externalWaterLevel::externalWaterLevel(const string& fileName) {
 				// need some temp values for converting time format to dt in hours
 				char tempChar;
 				int dtHour, dtMinute;
-				float dtSeconds;
+				double dtSeconds;
 
-				wlFile >> dtHour >> tempChar >> dtMinute >> dtSeconds;
-				dt = (double)dtHour + double(dtMinute) / 60.0 + double(dtSeconds) / 3600.0;
+				wlFile >> dtHour >> tempChar >> dtMinute >> tempChar >> dtSeconds;
+				dt = (double)dtHour + (double)dtMinute / 60.0 + dtSeconds / 3600.0;
 			}
 		}
 		int i = 0;
 		double tmpD;
 		while (wlFile >> tmpD) {
-			level[i] = tmpD;
-			time[i] = i * dt;
+			level.push_back(tmpD);
+			time.push_back(i * dt);
+			i++;
 		}
 		numberReadings = level.size();
 
@@ -288,6 +295,9 @@ double externalWaterLevel::getExternalWL(const double& timeNow) {
 turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 	ifstream HQPTurbines;
 	title = fileName;
+	turbineDiameter = trs.turbineDiameter;
+	totalArea = Pi * turbineDiameter * turbineDiameter * 0.25 * trs.numberTurbines;
+	coeffDischarge = trs.turbineCoefQ;
 	HQPTurbines.open(fileName);
 	if (HQPTurbines.is_open()) {
 		string tmp;
@@ -296,44 +306,48 @@ turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 			HQPTurbines >> originalDiameter;
 			// scale factor for original turbines to model turbines
 			double scaleFactor = (trs.turbineDiameter / originalDiameter) * (trs.turbineDiameter / originalDiameter);
-			double tmpD; // temporary variable to use when scaling
+			double tmpD1,tmpD2; // temporary variable to use when scaling
 			// this reader allows you to give the power and flow in either order
 			HQPTurbines >> tmp;
 			if (tmp == "KHP") {
 				HQPTurbines >> numHPPoints;
-				getline(HQPTurbines, tmp);
+				HQPTurbines >> tmp >> tmp >> tmp;
 				for (int i = 1; i <= numHPPoints; i++) {
-					HQPTurbines >> tmp >> powerHeadDifference[i] >>tmpD;
-					powerOutput[i] = tmpD * scaleFactor;
+					HQPTurbines >> tmp >> tmpD1 >>tmpD2;
+					powerHeadDifference.push_back(tmpD1);
+					powerOutput.push_back(tmpD2 * scaleFactor);
 				}
 			}
 			else if (tmp == "KHQ") {
 				HQPTurbines >> numHQPoints;
-				getline(HQPTurbines, tmp);
+				HQPTurbines >> tmp >> tmp >> tmp;
 				for (int j = 1; j <= numHQPoints; j++) {
-					HQPTurbines >> tmp >> powerHeadDifference[j] >> tmpD;
-					flowRate[j] = tmpD * scaleFactor;
+					HQPTurbines >> tmp >> tmpD1 >> tmpD2;
+					flowHeadDifference.push_back(tmpD1);
+					flowRate.push_back(tmpD2 * scaleFactor);
 				}
 			}
 			else {
 				cout << "Invalid turbine curve parameter (not KHP or KHQ)" << endl;
 			}
-			getline(HQPTurbines, tmp); // reads the row of asterisks
-			HQPTurbines >> tmp;
+			HQPTurbines >> tmp; // reads the row of asterisks
+			HQPTurbines >> tmp; // reads the other parameter name
 			if (tmp == "KHP") {
 				HQPTurbines >> numHPPoints;
-				getline(HQPTurbines, tmp);
+				HQPTurbines >> tmp >> tmp >> tmp;
 				for (int i = 1; i <= numHPPoints; i++) {
-					HQPTurbines >> tmp >> powerHeadDifference[i] >> tmpD;
-					powerOutput[i] = tmpD * scaleFactor;
+					HQPTurbines >> tmp >> tmpD1 >> tmpD2;
+					powerHeadDifference.push_back(tmpD1);
+					powerOutput.push_back(tmpD2 * scaleFactor);
 				}
 			}
 			else if (tmp == "KHQ") {
 				HQPTurbines >> numHQPoints;
-				getline(HQPTurbines, tmp);
+				HQPTurbines >> tmp >> tmp >> tmp;
 				for (int j = 1; j <= numHQPoints; j++) {
-					HQPTurbines >> tmp >> powerHeadDifference[j] >> tmpD;
-					flowRate[j] = tmpD * scaleFactor;
+					HQPTurbines >> tmp >> tmpD1 >> tmpD2;
+					flowHeadDifference.push_back(tmpD1);
+					flowRate.push_back(tmpD2 * scaleFactor);
 				}
 			}
 			else {
@@ -390,16 +404,16 @@ schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
 	numPoints = trs.numWaterLevelPoints;
 	//initialise the arrays
 	//assumes that the waterLevelMin is below the lowest point of bathymetry inside the trs
-	area[0] = 0.0;
-	level[0] = trs.waterLevelMin;
+	area.push_back(0.0);
+	level.push_back(trs.waterLevelMin);
 	if (title == "ERROR" || lagoonTitle == "ERROR" || meshTitle == "ERROR") {
 		cout << "Scheme Area Class created with errors" << endl;
 	}
 	double diffLevel = (trs.waterLevelMax - trs.waterLevelMin) / numPoints;
 	//loop through the height points
 	for (int i = 1; i <= numPoints; i++) {
-		area[i] = area[i-1];
-		level[i] = level[i] + diffLevel;
+		area.push_back(area[i-1]);
+		level.push_back(level[i-1] + diffLevel);
 		//loop through the elements
 		for (int j = 0; j < mesh.numberElements ; j++) {
 			if (level[i-1] < mesh.elementHeight[j] && mesh.elementHeight[j] <= level[i]) {
@@ -425,30 +439,30 @@ double schemeArea::getWettedArea(const double& internalWaterLevel) {
 results::results(const tidalRangeScheme& trs) {
 	title = "REsults from Tidal Range Scheme " + trs.title;
 	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
-	modelTimeHr[0] = 0;
-	upstreamWaterLevel[0] = 0;
-	downstreamWaterLevel[0] = 0;
-	headDifference[0] = 0;
-	wettedArea[0] = 0;
-	powerOutput[0] = 0;
-	powerGenerated[0] = 0;
-	turbineFlow[0] = 0;
-	sluiceFlow[0] = 0;
-	lagoonMode[0] = 0;
+	modelTimeHr.push_back(0);
+	upstreamWaterLevel.push_back(0);
+	downstreamWaterLevel.push_back(0);
+	headDifference.push_back(0);
+	wettedArea.push_back(0);
+	powerOutput.push_back(0);
+	powerGenerated.push_back(0);
+	turbineFlow.push_back(0);
+	sluiceFlow.push_back(0);
+	lagoonMode.push_back(0);
 }
 results::results(const tidalRangeScheme& trs, const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
 	title = "REsults from Tidal Range Scheme " + trs.title;
 	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
-	modelTimeHr[0] = time;
-	upstreamWaterLevel[0] = upstreamWL;
-	downstreamWaterLevel[0] = downstreamWL;
-	headDifference[0] = headDiff;
-	wettedArea[0] = wetArea;
-	powerOutput[0] = powerOut;
-	powerGenerated[0] = powerOut;
-	turbineFlow[0] = turbineQ;
-	sluiceFlow[0] = sluiceQ;
-	lagoonMode[0] = trsMode;
+	modelTimeHr.push_back(time);
+	upstreamWaterLevel.push_back(upstreamWL);
+	downstreamWaterLevel.push_back(downstreamWL);
+	headDifference.push_back(headDiff);
+	wettedArea.push_back(wetArea);
+	powerOutput.push_back(powerOut);
+	powerGenerated.push_back(powerOut);
+	turbineFlow.push_back(turbineQ);
+	sluiceFlow.push_back(sluiceQ);
+	lagoonMode.push_back(trsMode);
 }
 
 void results::addResults(const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
