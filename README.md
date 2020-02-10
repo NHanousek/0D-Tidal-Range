@@ -45,14 +45,14 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - [x] Constructor that takes filename as input
    - [x] Constructor that takes no inputs
  
- - [ ] Class schemeArea, wetted area and water levels for the lagon/barrage
+ - [x] Class schemeArea, wetted area and water levels for the lagon/barrage
    - Containing:
    - [x] int number of points
    - [x] array of doubles Levels
    - [x] array of doubles Areas
    - Functions:
-   - [ ] Constructor that takes in a Lagoon and a Mesh
-   - [ ] Function that takes water level and returns wetted area
+   - [x] Constructor that takes in a Lagoon and a Mesh
+   - [x] Function that takes water level and returns wetted area
    
 - [x] Class External Water Level, read from a telemac .ts1 file
    - Containing:
@@ -65,7 +65,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - [x] Constructor that takes filename as input
   - [x] Constructor that makes a blank error object, from no inputs
   
-- [ ] Class Turbines, read from a HQPTurbines file
+- [x] Class Turbines, read from a HQPTurbines file
    - Containing:
   - [x] double originalDiameter: original diameter of turbine
   - [x] double diameterTurbine: diameter of a single turbine
@@ -103,12 +103,12 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - [x] int array lagoonMode
    - [x] double array cumulativeElectricity (powerGenerated)
     - Functions:
-   - [ ] Default constructor
-   - [ ] line as string
-   - [ ] heading as string
-   - [ ] printing to console, one line or full results
-   - [ ] printing to file, one line or full results
-   - [ ] functions to add new data as it is calculated
+   - [x] Default constructor
+   - [x] line as string
+   - [x] heading as string
+   - [x] printing to console, one line or full results
+   - [x] printing to file, one line or full results
+   - [x] functions to add new data as it is calculated
  
 ## Approximate flow of model
 1. Declarations and definitions
