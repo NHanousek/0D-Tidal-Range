@@ -42,6 +42,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 		};
 		*/
 		getline(lagoonFile, title);
+		cout << "Reading Lagoon file [" << fileName << "]" << endl;
 		while (tmp != "End") {
 			lagoonFile >> tmp;
 
@@ -196,6 +197,7 @@ t3sMesh::t3sMesh(const string& fileName) {
 	if (meshFile.is_open()) {
 		title = fileName;
 		string tmp = fileName;
+		cout << "Reading Mesh file [" << fileName << "]" << endl;
 		while (tmp != ":EndHeader") {
 			meshFile >> tmp;
 			if (tmp == ":NodeCount") {
@@ -239,6 +241,7 @@ externalWaterLevel::externalWaterLevel(const string& fileName) {
 	wlFile.open(fileName);
 	if (wlFile.is_open()) {
 		title = fileName;
+		cout << "Reading Water Level file [" << fileName << "]" << endl;
 		string tmp = fileName;
 		while (tmp != ":EndHeader") {
 			wlFile >> tmp;
@@ -301,6 +304,7 @@ turbines::turbines(const tidalRangeScheme& trs, const string& fileName) {
 	HQPTurbines.open(fileName);
 	if (HQPTurbines.is_open()) {
 		string tmp;
+		cout << "Reading Turbine file [" << fileName << "]" << endl;
 		HQPTurbines >> tmp;
 		if (tmp == "OriginalDiameter(m)") {
 			HQPTurbines >> originalDiameter;
@@ -402,6 +406,7 @@ schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
 	lagoonTitle = trs.title;
 	meshTitle = mesh.title;
 	numPoints = trs.numWaterLevelPoints;
+	cout << "Composing scheme area..." << endl;
 	//initialise the arrays
 	//assumes that the waterLevelMin is below the lowest point of bathymetry inside the trs
 	area.push_back(0.0);
@@ -437,6 +442,7 @@ double schemeArea::getWettedArea(const double& internalWaterLevel) {
 }
 
 results::results(const tidalRangeScheme& trs) {
+	cout << "Initialising results." << endl;
 	title = "REsults from Tidal Range Scheme " + trs.title;
 	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
 	modelTimeHr.push_back(0);
@@ -636,6 +642,15 @@ int nextMode(const tidalRangeScheme& trs, const results& previous) {
 	}
 }
 
+double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, schemeArea& area, const tidalRangeScheme& trs) {
+	if (area.getWettedArea(oldUpstreamLevel) < 0) {
+		return oldUpstreamLevel;
+	}
+	return (oldUpstreamLevel + trs.timeStep.z * (flowTurbines + flowSluices + inFlow) / area.getWettedArea(oldUpstreamLevel));
+	//tdouble3 dt = trs.timeStep;
+	//double oldArea = area.getWettedArea(oldUpstreamLevel);
+	//double newArea;
+}
 //Everything below here is kept for reference only
 /*
 //Printers to console and to string

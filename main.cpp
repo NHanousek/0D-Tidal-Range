@@ -8,34 +8,30 @@
 using namespace std;
 int main()
 {
+	//Configure the model
 	string cfgName = "BarraCUDA.txt";
-
 	modelConfig config = modelConfig(cfgName);
 
-	cout << "Config read"<< endl;
-	// lets test each of the classes out in turn.
+	//Load the parameters
 	//tidalRangeScheme
 	tidalRangeScheme TRS = tidalRangeScheme(config.LagoonFileName);
-	cout << "lagoon read" << endl;
-
 	//t3sMesh
 	t3sMesh mesh = t3sMesh(config.meshFileName);
-	cout << "mesh read" << endl;
-
 	//externalWaterLevel
 	externalWaterLevel downstreamWL = externalWaterLevel(config.externalWaterLevelFileName);
-	cout << "water level read" << endl;
-
 	//turbines
 	turbines TRBN = turbines(TRS, config.turbinesFileName);
-	cout << "turbines read" << endl;
-
 	//schemeArea
 	schemeArea Area = schemeArea(TRS, mesh);
-	cout << "area read" << endl;
+	
+	
+	//initialise results for first (0) timestep
 
-	//results;
 	results modelResults = results(TRS);
+	
+	// 
+
+
 
 	cout << "All done." << endl;
 	return 0;
