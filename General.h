@@ -49,7 +49,7 @@ double orificeFlow(const double& dischargeCoeff, const double& headDifference, c
         return (double)dischargeCoeff * area * sqrt(2 * g * absolute(headDifference));
     }
     else {
-        return (double)dischargeCoeff * area * sqrt(2 * g * absolute(headDifference)*-1);
+        return (double)(dischargeCoeff * area * sqrt(2 * g * absolute(headDifference))*-1);
     }
 }
 // simple trapezium rule for areas and volumes

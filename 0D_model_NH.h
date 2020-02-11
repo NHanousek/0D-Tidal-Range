@@ -85,6 +85,7 @@ public:
 	
 	schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh); // constructor
 	double getWettedArea(const double& internalWaterLevel);	// uses interpolation
+	double getWaterLevel(const double& wettedArea);
 	~schemeArea() {}; // destructor
 };
 
@@ -107,10 +108,12 @@ public:
 	void addResults(const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode); // effectively push_back for the data
 	string header(); // currently header == info, but this may change
 	string line(const int& i);	 // one lne of results as string
+	void header(const string& fileName);
 	void line(const int& i, const string& fileName); // print a singe line to a file
 	void printFull();	// full results to user
 	void printFull(const string& fileName);	// full results to file
-	void calculateNextWL(); // this one needs some work?
+	//void calculateNextWL(); // this one needs some work?
+
 };
 
 class modelConfig {
@@ -121,9 +124,12 @@ public: // basically stores all the file names
 	modelConfig(const string& configFileName);
 };
 
+//int weTDry(const double& sH, const results& previous);
+int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff);
 int nextMode(const tidalRangeScheme& trs, const results& previous);
-double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, const schemeArea& area, const tidalRangeScheme& trs);
+//double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, const schemeArea& area, const tidalRangeScheme& trs);
 
+double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, schemeArea& area, const tidalRangeScheme& trs);
 
 #endif
 

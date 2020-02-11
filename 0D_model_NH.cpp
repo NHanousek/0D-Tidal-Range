@@ -3,7 +3,6 @@
 
 #include "0D_model_NH.h"
 #include "General.h"
-#include <cstdlib>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -288,7 +287,7 @@ externalWaterLevel::externalWaterLevel() {
 }
 double externalWaterLevel::getExternalWL(const double& timeNow) {
 	for (int i = 0; i <= (int)time.size()-1; i++) {
-		if (time[i] <= timeNow <= time[i + 1]) {
+		if (time[i] <= timeNow && timeNow < time[i + 1]) {
 			return interpolate(time[i], timeNow, time[i + 1], level[i], level[i + 1]);
 		}
 	}
@@ -429,22 +428,40 @@ schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
 }
 
 double schemeArea::getWettedArea(const double& internalWaterLevel) {
-	if (internalWaterLevel < level[0]) {
+
+	if (internalWaterLevel < level.front()) {
 		return 0; // if the desired level is below the bed level of the tidal range scheme
 	}
-	for (int i = 0; i <= numPoints; i++) {
-		if (level[i] <= internalWaterLevel <= level[i + 1]) {
-			return interpolate(level[i], internalWaterLevel, level[i + 1], area[i], area[i + 1]);
+	else if (internalWaterLevel > level.back()) {
+		return area.back(); // 
+	}
+	else {
+		for (int i = 0; i < numPoints; i++) {
+			if (level[i] < internalWaterLevel && internalWaterLevel <= level[i + 1]) {
+				return interpolate(level[i], internalWaterLevel, level[i + 1], area[i], area[i + 1]);
+			}
+		}
+	}	
+}
+double schemeArea::getWaterLevel(const double& wettedArea) {
+	if (wettedArea == 0) {
+		for (int i = 0; i < numPoints; i++) {
+			if (area[i] <= 0 && area[i + 1] > 0) {
+				return level[i];
+			}
 		}
 	}
-	cout << "Lagoon potentially overfilled" << endl;
-	return area.back(); //if too large return top size;
+	for (int i = 0; i < numPoints; i++) {
+		if (area[i] < wettedArea && wettedArea <= area[i + 1]) {
+			return interpolate(area[i], wettedArea, area[i + 1], level[i], level[i + 1]);
+		}
+	}
 }
 
 results::results(const tidalRangeScheme& trs) {
 	cout << "Initialising results." << endl;
 	title = "REsults from Tidal Range Scheme " + trs.title;
-	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
+	info = "Time(Hr) WLup(m) WLdown(m) HeadDiff(m) TRSarea(m2) Power(MW) Energy(MWH) QTurb(m3/s) QSluice(m3/s) Mode(-)";
 	modelTimeHr.push_back(0);
 	upstreamWaterLevel.push_back(0);
 	downstreamWaterLevel.push_back(0);
@@ -458,7 +475,7 @@ results::results(const tidalRangeScheme& trs) {
 }
 results::results(const tidalRangeScheme& trs, const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
 	title = "REsults from Tidal Range Scheme " + trs.title;
-	info = "Time(Hr)\tWLup(m)\tWLdown(m)\tHeadDiff(m)\tTRSarea(m2)\tPower(MW)\tEnergy(MWH)\tQTurb(m3/s)\tQSluice(m3/s)\tMode(-)";
+	info = "Time(Hr) WLup(m) WLdown(m) HeadDiff(m) TRSarea(m2) Power(MW) Energy(MWH) QTurb(m3/s) QSluice(m3/s) Mode(-)";
 	modelTimeHr.push_back(time);
 	upstreamWaterLevel.push_back(upstreamWL);
 	downstreamWaterLevel.push_back(downstreamWL);
@@ -486,17 +503,28 @@ void results::addResults(const double& time, const double& upstreamWL, const dou
 string results::header() {
 	return title + "\n" + info;
 }
+void results::header(const string& fileName) {
+	ofstream outFile;
+	outFile.open(fileName);
+	if (outFile.is_open()) {
+		outFile << title << "\n" << info;
+	}
+	else {
+		cout << "Output file [" << fileName << "] could not be opened..." << endl;
+	}
+}
+
 string results::line(const int& i) {
 	string output;
-	output += to_string(modelTimeHr[i]) +"\t";
-	output += to_string(upstreamWaterLevel[i]) + "\t";
-	output += to_string(downstreamWaterLevel[i]) + "\t";
-	output += to_string(headDifference[i]) + "\t";
-	output += to_string(wettedArea[i]) + "\t";
-	output += to_string(powerOutput[i]) + "\t";
-	output += to_string(powerGenerated[i]) + "\t";
-	output += to_string(turbineFlow[i]) + "\t";
-	output += to_string(sluiceFlow[i]) + "\t";
+	output += to_string(modelTimeHr[i]) +", ";
+	output += to_string(upstreamWaterLevel[i]) + ", ";
+	output += to_string(downstreamWaterLevel[i]) + ", ";
+	output += to_string(headDifference[i]) + ", ";
+	output += to_string(wettedArea[i]) + ", ";
+	output += to_string(powerOutput[i]) + ", ";
+	output += to_string(powerGenerated[i]) + ", ";
+	output += to_string(turbineFlow[i]) + ", ";
+	output += to_string(sluiceFlow[i]) + ", ";
 	output += to_string(lagoonMode[i]);
 	return output;
 }
@@ -520,9 +548,9 @@ void results::printFull(const string& fileName) {
 	ofstream outFile;
 	outFile.open(fileName);
 	if (outFile.is_open()) {
-		outFile << header();
-		for (int i = 0; i <= modelTimeHr.size(); i++) {
-			outFile << line(i);
+		outFile << header() << endl;
+		for (int i = 0; i < modelTimeHr.size(); i++) {
+			outFile << line(i) << endl;
 		}
 	}
 	else {
@@ -569,6 +597,9 @@ modelConfig::modelConfig(const string& configFileName) {
 int nextMode(const tidalRangeScheme& trs, const results& previous) {
 	if (trs.schemeType == 1) {
 		// Ebb only - No Pumping
+		if (previous.wettedArea.back() <= 0) {
+			return 1;
+		}
 		switch (previous.lagoonMode.back()) {
 			case 1: //Filling/sluicing
 				if (previous.headDifference.back() > 0) {
@@ -605,6 +636,9 @@ int nextMode(const tidalRangeScheme& trs, const results& previous) {
 	}
 	else if (trs.schemeType == 2) {
 		// Two-way generation - No Pumping
+		if (previous.wettedArea.back() <= 0) {
+			return 1;
+		}
 		switch (previous.lagoonMode.back()) {
 		case 1: //Filling/sluicing
 			if (-0.01 <= previous.headDifference.back() <= 0.01) {
@@ -641,17 +675,156 @@ int nextMode(const tidalRangeScheme& trs, const results& previous) {
 		return 0;
 	}
 }
+int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff) {
+	if (trs.schemeType == 1) {
+		// Ebb only - No Pumping
+		//if (previous.wettedArea.back() <= 0) {
+		//	return 1;
+		//}
+		if (previous.wettedArea.back() <= 0.0) {
+			if (headDiff > 0) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+		}
+		switch (previous.lagoonMode.back()) {
+		case 1: //Filling/sluicing
+			if (previous.wettedArea.back() <= 0.1) {
+				if (headDiff > 0) {
+					return 2;
+				}
+				else {
+					return 1;
+				}
+			}
+			if (headDiff > 0) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+			break;
+		case 2: //Holding
+			if (previous.wettedArea.back() <= 0.1) {
+				if (headDiff <= 0) {
+					return 2;
+				}
+				else {
+					return 1;
+				}
+			}
+			if (headDiff >= trs.headDiffStart) {
+				return 3;
+			}
+			else if (headDiff < 0) {
+				return 1;
+			}
+			else {
+				return 2;
+			}
+			break;
+		case 3: //Generating
+			if (previous.wettedArea.back() <= 0.1) {
+				if (headDiff <= 0) {
+					return 2;
+				}
+				else {
+					return 1;
+				}
+			}
+			if (headDiff <= trs.headDiffEnd) {
+				return 2;
+			}
+			else {
+				return 3;
+			}
+			break;
+		default: //Error
+			cout << "Error with Tidal Range Scheme Mode..." << endl;
+			return 0;
+			break;
+		}
+	}
+	else if (trs.schemeType == 2) {
 
+		// Two-way generation - No Pumping
+		if (previous.wettedArea.back() <= 0.0) {
+			if (headDiff > 0) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+		}
+		if (previous.wettedArea.back() <= 0) {
+			return 1;
+		}
+		switch (previous.lagoonMode.back()) {
+		case 1: //Filling/sluicing
+			if (-0.01 <= headDiff <= 0.01) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+			break;
+		case 2: //Holding
+			if (absolute(headDiff) >= trs.headDiffStart) {
+				return 3;
+			}
+			else {
+				return 2;
+			}
+			break;
+		case 3: //Generating
+			if (absolute(headDiff) <= trs.headDiffEnd) {
+				return 1;
+			}
+			else {
+				return 3;
+			}
+			break;
+		default: //Error
+			cout << "Error with Tidal Range Scheme Mode..." << endl;
+			return 0;
+			break;
+		}
+	}
+	else {
+		cout << "Error with Tidal Range Scheme Type..." << endl;
+		return 0;
+	}
+}
 double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, schemeArea& area, const tidalRangeScheme& trs) {
-	if (area.getWettedArea(oldUpstreamLevel) < 0) {
+	if (area.getWettedArea(oldUpstreamLevel) <= 0) {
 		return oldUpstreamLevel;
 	}
-	return (oldUpstreamLevel + trs.timeStep.z * (flowTurbines + flowSluices + inFlow) / area.getWettedArea(oldUpstreamLevel));
+	return (oldUpstreamLevel + trs.timeStep.z * (inFlow - flowTurbines - flowSluices) / (area.getWettedArea(oldUpstreamLevel)));
 	//tdouble3 dt = trs.timeStep;
 	//double oldArea = area.getWettedArea(oldUpstreamLevel);
 	//double newArea;
 }
+
 //Everything below here is kept for reference only
+
+/*
+int wetDry(const double& dH, const results& previous) {
+	if (previous.wettedArea.back() <= 0.0) {
+		if (dH > 0) {
+			return 2;
+		}
+		else {
+			return 1;
+		}
+	}
+	else {
+		return previous.lagoonMode.back();
+	}
+}
+*/
+
 /*
 //Printers to console and to string
 void variable::printVariable() {

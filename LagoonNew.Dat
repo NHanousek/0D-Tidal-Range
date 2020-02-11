@@ -1,6 +1,6 @@
 Title Line Here
 simTime(hrs)= 180
-timeStep(sec)= 300
+timeStep(sec)= 180
 timeAdjust(min)= 10
 schemeType(k)= 1
 turbineType(k)= 1
