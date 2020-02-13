@@ -86,7 +86,8 @@ public:
 	schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh); // constructor
 	double getWettedArea(const double& internalWaterLevel);	// uses interpolation
 	double getWaterLevel(const double& wettedArea);
-	~schemeArea() {}; // destructor
+	double waterLevelFromVolumeChange(const double& initialLevel, const double& volumeChange);	~schemeArea() {}; // destructor
+	void printScheme(const string& fileName);
 };
 
 class results {

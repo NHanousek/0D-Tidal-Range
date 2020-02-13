@@ -57,11 +57,27 @@ double trapezium(const double& area1, const double& area2, const double& dh) {  
 
 // interpolate to find y2 from (x1,y1), (x3,y3) and x2.
 double interpolate(const double& x1, const double& x2, const double& x3, const double& y1, const double& y3) {
-    return y1 + (x2 - x1) * (y3 - y1) / (x3 - x1);
+    if (x2 > x3) {
+        return y3;
+    }
+    else if (x2 < x1) {
+        return y1;
+    }
+    else {
+        return y1 + (x2 - x1) * (y3 - y1) / (x3 - x1);
+    }
     //https://www.ajdesigner.com/phpinterpolation/linear_interpolation_equation.php
 }
 double interpolate(const int& x1, const int& x2, const int& x3, const int& y1, const int& y3) {
-    return (double)y1 + ((double)x2 - (double)x1) * ((double)y3 - (double)y1) / ((double)x3 - (double)x1);
+    if (x2 > x3) {
+        return y3;
+    }
+    else if (x2 < x1) {
+        return y1;
+    }
+    else {
+        return (double)y1 + ((double)x2 - (double)x1) * ((double)y3 - (double)y1) / ((double)x3 - (double)x1);
+    }
 }
 
 // Following structs taken from DualSPHysics typesDef.h

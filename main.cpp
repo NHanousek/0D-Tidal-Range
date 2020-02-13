@@ -22,7 +22,8 @@ int main()
 	turbines TRBN(TRS, config.turbinesFileName);
 	//schemeArea
 	schemeArea Area(TRS, mesh);
-	
+	Area.printScheme("SchemeArea.out");
+
 	cout << "Initialising results:" << endl;
 	//The current model values at every timestep
 	//initialise results for first (0) timestep

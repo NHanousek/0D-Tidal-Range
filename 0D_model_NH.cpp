@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 using namespace std;
 tidalRangeScheme::tidalRangeScheme(const string& fileName) {
@@ -14,32 +15,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 	lagoonFile.open(fileName);
 	if (lagoonFile.is_open()) {
 		string tmp = "Start";
-		/*
-		enum argName {
-			simTime,
-			timeStep_sec,
-			timeStep_min,
-			timeStep_hrs,
-			timeAdjust_sec,
-			timeAdjust_min,
-			timeAdjust_hrs,
-			schemeType_k,
-			turbineType_k,
-			numberTurbines_int,
-			areaSluices_m2,
-			turbineDiameter_m,
-			turbineArea_m2,
-			headDiffMax_m,
-			headDiffMim_m,
-			waterLevelMax_m,
-			waterLevelMin_m,
-			numWaterLevelPoints_int,
-			sluiceCoefQ_0_1,
-			turbineCoefQ_0_1,
-			generatorEfficiency_0_1,
-			generatorEfficiency_percent
-		};
-		*/
+
 		getline(lagoonFile, title);
 		cout << "Reading Lagoon file [" << fileName << "]" << endl;
 		while (tmp != "End") {
@@ -134,36 +110,6 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 
 				cout << "Unrecognised Lagoon Parameter [" << tmp << "] read." << endl;
 			}
-
-			/*switch (tmp) {
-
-				
-				//what I was hoping to do...
-				case "simTime="
-				case "timeStep(sec)="
-				case "timeStep(min)="
-				case "timeStep(hrs)="
-				case "timeAdjust(sec)="
-				case "timeAdjust(min)="
-				case "timeAdjust(hrs)="
-				case "schemeType(k)="
-				case "turbineType(k)="
-				case "numberTurbines(int)="
-				case "areaSluices(m2)="
-				case "turbineDiameter(m)="
-				case "turbineArea(m2)="
-				case "headDiffMax(m)="
-				case "headDiffMim(m)="
-				case "waterLevelMax(m)="
-				case "waterLevelMin(m)="
-				case "numWaterLevelPoints(int)="
-				case "sluiceCoefQ(0-1)="
-				case "turbineCoefQ(0-1)="
-				case "generatorEfficiency(0-1)="
-				case "generatorEfficiency(%)="
-				case default:
-				
-			}*/
 		}
 
 		lagoonFile.close();
@@ -457,6 +403,57 @@ double schemeArea::getWaterLevel(const double& wettedArea) {
 		}
 	}
 }
+double schemeArea::waterLevelFromVolumeChange(const double& initialLevel, const double& volumeChange) {
+	if (volumeChange == 0) {
+		return initialLevel;
+	}
+	else if (volumeChange < 0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel)) {
+		return getWaterLevel(0);
+	}
+	else {
+		//Trapezium assumption:
+		/*	volumeChange = (area1 + area2) * (level2 - level1) / 2
+			but, we don't know level or area 2. 
+			All we know is that for one, you can find the other.
+			(because there are area-level functions for that)
+			So we must rearrange the equation, and iterate to find the solution...
+			this may make the model quite slow, but I think it's more accurate
+			and it should allow for wetting and drying.		N. Hanousek */
+		double newVolumeChange(0), newLevel(initialLevel), accuracy(0.001);
+	
+		// initialise upper and lower bound points for the search.
+		double upperLevel(level.back()), lowerLevel(getWaterLevel(0.0));
+		// search...
+		while (newVolumeChange < volumeChange - accuracy || volumeChange + accuracy < newVolumeChange ) { // volume change suggested is not volume change desired
+			if (newVolumeChange < volumeChange) {// too low
+				lowerLevel = newLevel; // bring lower bound up
+			}
+			else /*if (newVolumeChange > volumeChange)*/ {// too high
+				upperLevel = newLevel; // bring upper bound down
+			}
+			newLevel = (lowerLevel + upperLevel) / 2;
+			newVolumeChange = 0.5 * (getWettedArea(initialLevel) + getWettedArea(newLevel)) * (newLevel - initialLevel);
+		}
+		return newLevel;
+	}	
+}
+void schemeArea::printScheme(const string& fileName) {
+	ofstream outFile;
+	outFile.open(fileName);
+	if (outFile.is_open()) {
+		outFile << "Scheme: " << title << endl
+			<< "Mesh: " << meshTitle << endl
+			<< "Lagoon: " << lagoonTitle << endl
+			<< "Level(m)\tArea(m2)" << endl;
+		for (int i = 0; i < level.size(); i++) {
+			outFile << level[i] << "\t,\t" << (double)area[i] << endl;
+		}
+		outFile.close();
+	}
+	else {
+		cout << "Output file [" << fileName << "] could not be opened..." << endl;
+	}
+}
 
 results::results(const tidalRangeScheme& trs) {
 	cout << "Initialising results." << endl;
@@ -533,6 +530,7 @@ void results::line(const int& i, const string& fileName) {
 	outFile.open(fileName);
 	if (outFile.is_open()) {
 		outFile << line(i);
+		outFile.close();
 	}
 	else {
 		cout << "Output file [" << fileName << "] could not be opened..." << endl;
@@ -552,6 +550,7 @@ void results::printFull(const string& fileName) {
 		for (int i = 0; i < modelTimeHr.size(); i++) {
 			outFile << line(i) << endl;
 		}
+		outFile.close();
 	}
 	else {
 		cout << "Output file [" << fileName << "] could not be opened..." << endl;
@@ -801,13 +800,41 @@ double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbin
 	if (area.getWettedArea(oldUpstreamLevel) <= 0) {
 		return oldUpstreamLevel;
 	}
-	return (oldUpstreamLevel + trs.timeStep.z * (inFlow - flowTurbines - flowSluices) / (area.getWettedArea(oldUpstreamLevel)));
+	double volumeChange = trs.timeStep.z * (inFlow - flowTurbines - flowSluices);
+	return area.waterLevelFromVolumeChange(oldUpstreamLevel, volumeChange);
 	//tdouble3 dt = trs.timeStep;
 	//double oldArea = area.getWettedArea(oldUpstreamLevel);
 	//double newArea;
 }
 
 //Everything below here is kept for reference only
+
+		/*
+		enum argName {
+			simTime,
+			timeStep_sec,
+			timeStep_min,
+			timeStep_hrs,
+			timeAdjust_sec,
+			timeAdjust_min,
+			timeAdjust_hrs,
+			schemeType_k,
+			turbineType_k,
+			numberTurbines_int,
+			areaSluices_m2,
+			turbineDiameter_m,
+			turbineArea_m2,
+			headDiffMax_m,
+			headDiffMim_m,
+			waterLevelMax_m,
+			waterLevelMin_m,
+			numWaterLevelPoints_int,
+			sluiceCoefQ_0_1,
+			turbineCoefQ_0_1,
+			generatorEfficiency_0_1,
+			generatorEfficiency_percent
+		};
+		*/
 
 /*
 int wetDry(const double& dH, const results& previous) {
