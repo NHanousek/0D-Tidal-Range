@@ -12,7 +12,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 
 ## Principles:
   1. Flow from upstream to downstream is positive.
-  2. Flow calcs to use metres and seconds. Hours and minutes only for user input and output
+  2. Time: flow calcs to use metres and seconds. Main model clock to use hours. Hours and minutes only for user input and output
   3. If you do it more than twice, make it a function (and really if you do it more than once).
   4. Try and use consistent patterns and nomenclature between classes and functions. 
                 
@@ -21,7 +21,9 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
                 const string& fileName; // when called in the function input
                 fileName= Lagoon.txt;   // when declared in the main program.
                 
-  5. Next principle
+  5. use longNamesForThings to make it easier to determine what is being used.
+  6. No user input.
+  7. Function first, performance next.
 
 ## Plan:
 ### What the model should contain:
