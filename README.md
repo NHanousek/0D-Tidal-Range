@@ -27,6 +27,13 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 
 ## Plan:
 ### What the model should contain:
+- [ ] Class Model, to make genetic/parallel modelling functionality
+	- [ ] Lagoon
+	- [ ] Turbines
+	- [ ] schemeArea
+	- [ ] External Water Level
+	- [ ] Results
+	- [ ] 
 - [ ] Class Lagoon, 
    - Containing:
    - [x] All the basic info about the lagoon itself

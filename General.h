@@ -16,18 +16,16 @@ const double g = 9.807;             // Gravity
 
 //constant absolute values for ints and doubles
 double absolute(const double& input) {
-    double output = input; 
     if (input < 0) {
-        output = -1 * input;
+        return (-1 * input);
     }
-    return output;
+    return input;
 }
 int absolute(const int& input) {
-    int output = input;
     if (input < 0) {
-        output = -1 * input;
+        return (-1 * input);
     }
-    return output;
+    return input;
 }
 // takes three sets of xyz points and finds the area in the xy plane
 double areaTriangle(const tdouble3& A, const tdouble3& B, const tdouble3& C) {
@@ -57,10 +55,11 @@ double trapezium(const double& area1, const double& area2, const double& dh) {  
 
 // interpolate to find y2 from (x1,y1), (x3,y3) and x2.
 double interpolate(const double& x1, const double& x2, const double& x3, const double& y1, const double& y3) {
-    if (x2 > x3) {
+    // if it's outside the points, use the bound.
+    if (x2 > x1 && x2 > x3) {
         return y3;
     }
-    else if (x2 < x1) {
+    else if (x2 < x1 && x2 < x3) {
         return y1;
     }
     else {
@@ -69,10 +68,10 @@ double interpolate(const double& x1, const double& x2, const double& x3, const d
     //https://www.ajdesigner.com/phpinterpolation/linear_interpolation_equation.php
 }
 double interpolate(const int& x1, const int& x2, const int& x3, const int& y1, const int& y3) {
-    if (x2 > x3) {
+    if (x2 > x1&& x2 > x3) {
         return y3;
     }
-    else if (x2 < x1) {
+    else if (x2 < x1 && x2 < x3) {
         return y1;
     }
     else {

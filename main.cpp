@@ -22,6 +22,9 @@ int main()
 	turbines TRBN(TRS, config.turbinesFileName);
 	//schemeArea
 	schemeArea Area(TRS, mesh);
+	
+	mesh.~t3sMesh();
+
 	Area.printScheme("SchemeArea.out");
 
 	cout << "Initialising results:" << endl;
@@ -47,6 +50,7 @@ int main()
 	//Results.line(0, config.resultsFileName);
 
 	cout << Results.header() << endl;
+	cout << Results.line(0) << endl;
 
 	//FULLY EXPLICIT - EULER MODEL
 	cout << "Starting Simulation:" << endl;
@@ -81,16 +85,17 @@ int main()
 			switch (trsMode) {
 			case 1: // Filling/sluicing
 				powerOut = 0;
-				turbineQ = TRBN.getFillingFlow(headDiff);
+				//turbineQ = TRS.numberTurbines*TRBN.getFillingFlow(headDiff); Removed to match JX's model
+				turbineQ = TRS.numberTurbines * TRBN.getFlowRate(headDiff, TRS);
 				sluiceQ = TRS.sluiceFlowRate(headDiff);
 				break;
 			case 2: // Holding
 				turbineQ = sluiceQ = powerOut = 0;// No flow thrugh the turbines or sluices
 				break;
 			case 3: // Generating
-				powerOut = TRBN.getPowerOutput(headDiff, TRS);
-				turbineQ = TRBN.getFlowRate(headDiff, TRS);
-				sluiceQ = TRS.sluiceFlowRate(headDiff);
+				powerOut = TRS.numberTurbines * TRBN.getPowerOutput(headDiff, TRS);
+				turbineQ = TRS.numberTurbines * TRBN.getFlowRate(headDiff, TRS);
+				sluiceQ = 0.0;
 				break;
 			default:
 				cout << "Invalid tidal range scheme mode [" << trsMode<< "] entered..." << endl;
