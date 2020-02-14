@@ -372,11 +372,20 @@ schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
 	cout << "Composing scheme area..." << endl;
 	//initialise the arrays
 	//assumes that the waterLevelMin is below the lowest point of bathymetry inside the trs
-	area.push_back(0.0);
-	level.push_back(trs.waterLevelMin);
+	
 	if (title == "ERROR" || lagoonTitle == "ERROR" || meshTitle == "ERROR") {
 		cout << "Scheme Area Class created with errors" << endl;
 	}
+	double base = 0;
+	for (int j = 0; j < mesh.numberElements; j++) {
+		if (mesh.elementHeight[j] <= trs.waterLevelMin) {
+			base += mesh.elementArea[j];
+		}
+	}
+	
+	area.push_back(base);
+	level.push_back(trs.waterLevelMin);
+
 	double diffLevel = (trs.waterLevelMax - trs.waterLevelMin) / numPoints;
 	//loop through the height points
 	for (int i = 1; i <= numPoints; i++) {
