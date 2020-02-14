@@ -56,6 +56,19 @@ int main()
 		modelTime += TRS.timeStep.x; // incremement time
 		downstream = downstreamWL.getExternalWL(modelTime); // the tide moves the downstream
 
+		// wetting drying check
+		double tmpUpstream = newUpstreamLevel(upstream, turbineQ, sluiceQ, inFlow, Area, TRS);
+		double tmpWetArea = Area.getWettedArea(tmpUpstream);
+
+		if (tmpWetArea <= 0) {
+			wetArea = 0;
+			upstream = Area.getWaterLevel(0);
+		}
+		else {
+			upstream = tmpUpstream;
+			wetArea = tmpWetArea;
+		}
+
 		// and that tide changes the head difference between upstream and downstream
 		headDiff = upstream - downstream; // up - down.
 
@@ -83,7 +96,8 @@ int main()
 				cout << "Invalid tidal range scheme mode [" << trsMode<< "] entered..." << endl;
 				return 1;
 			}
-		}
+		} 
+		// These will be the codes for pumped ebb and two way operation
 		else if (TRS.schemeType == 11 || TRS.schemeType == 21) {
 			cout << "Pumping not yet included in model!" << endl;
 			return 2;
@@ -92,11 +106,11 @@ int main()
 			cout << "Invalid tidal range scheme type entered [" << TRS.schemeType << "]..." << endl;
 			return 1;
 		}
-
+/*
 		double tmpUpstream = newUpstreamLevel(upstream, turbineQ, sluiceQ, inFlow, Area, TRS);
 		double tmpWetArea = Area.getWettedArea(tmpUpstream);
 
-		// wetting drying check
+		 wetting drying check
 		if (tmpWetArea <= 0) {
 			wetArea = 0;
 			upstream = Area.getWaterLevel(0);
@@ -104,7 +118,7 @@ int main()
 		else {
 			upstream = tmpUpstream;
 			wetArea = tmpWetArea;
-		}
+		}*/
 
 		//save outputs to results
 		Results.addResults(modelTime, upstream, downstream, headDiff, wetArea, powerOut, turbineQ, sluiceQ, trsMode);

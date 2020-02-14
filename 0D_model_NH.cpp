@@ -407,8 +407,9 @@ double schemeArea::waterLevelFromVolumeChange(const double& initialLevel, const 
 	if (volumeChange == 0) {
 		return initialLevel;
 	}
-	else if (volumeChange < 0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel)) {
-		return getWaterLevel(0);
+	else if (volumeChange < 0 && volumeChange < (0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel))) {
+		// if the lagoon is draining and the volume change is more than the remaining lagoon volume
+		return getWaterLevel(0); // the lagoon will rest at empty
 	}
 	else {
 		//Trapezium assumption:
@@ -469,6 +470,7 @@ results::results(const tidalRangeScheme& trs) {
 	turbineFlow.push_back(0);
 	sluiceFlow.push_back(0);
 	lagoonMode.push_back(0);
+	dtHr = trs.timeStep.x;
 }
 results::results(const tidalRangeScheme& trs, const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
 	title = "REsults from Tidal Range Scheme " + trs.title;
@@ -483,6 +485,7 @@ results::results(const tidalRangeScheme& trs, const double& time, const double& 
 	turbineFlow.push_back(turbineQ);
 	sluiceFlow.push_back(sluiceQ);
 	lagoonMode.push_back(trsMode);
+	dtHr = trs.timeStep.x;
 }
 
 void results::addResults(const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
@@ -492,7 +495,7 @@ void results::addResults(const double& time, const double& upstreamWL, const dou
 	headDifference.push_back(headDiff);
 	wettedArea.push_back(wetArea);
 	powerOutput.push_back(powerOut);
-	powerGenerated.push_back(powerGenerated.back() + powerOut);
+	powerGenerated.push_back(powerGenerated.back() + powerOut* dtHr);
 	turbineFlow.push_back(turbineQ);
 	sluiceFlow.push_back(sluiceQ);
 	lagoonMode.push_back(trsMode);
@@ -797,9 +800,6 @@ int nextMode(const tidalRangeScheme& trs, const results& previous, const double&
 	}
 }
 double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, schemeArea& area, const tidalRangeScheme& trs) {
-	if (area.getWettedArea(oldUpstreamLevel) <= 0) {
-		return oldUpstreamLevel;
-	}
 	double volumeChange = trs.timeStep.z * (inFlow - flowTurbines - flowSluices);
 	return area.waterLevelFromVolumeChange(oldUpstreamLevel, volumeChange);
 	//tdouble3 dt = trs.timeStep;

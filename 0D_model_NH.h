@@ -93,6 +93,7 @@ public:
 class results {
 public:
 	string title, info; // metadata
+	double dtHr;
 	vector<double> modelTimeHr; // every timestep
 	vector<double> upstreamWaterLevel; // every upstream water level
 	vector<double> downstreamWaterLevel; // every downstream water level
