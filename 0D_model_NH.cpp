@@ -418,6 +418,9 @@ double schemeArea::getWettedArea(const double& internalWaterLevel) {
 }
 double schemeArea::getWaterLevel(const double& wettedArea) {
 	if (wettedArea == 0) {
+		if (area.front() >= 0) {
+			return level.front();
+		}
 		for (int i = 0; i < numPoints; i++) {
 			if (area[i] <= 0 && area[i + 1] > 0) {
 				return level[i];
@@ -474,7 +477,7 @@ void schemeArea::printScheme(const string& fileName) {
 			<< "Lagoon: " << lagoonTitle << endl
 			<< "Level(m)\tArea(m2)" << endl;
 		for (int i = 0; i < level.size(); i++) {
-			outFile << level[i] << "\t,\t" << (double)area[i] << endl;
+			outFile << level[i] << "\t" << (double)area[i] << endl;
 		}
 		outFile.close();
 	}
@@ -500,8 +503,8 @@ results::results(const tidalRangeScheme& trs) {
 	dtHr = trs.timeStep.x;
 }
 results::results(const tidalRangeScheme& trs, const double& time, const double& upstreamWL, const double& downstreamWL, const double& headDiff, const double& wetArea, const double& powerOut, const double& turbineQ, const double& sluiceQ, const int& trsMode) {
-	title = "REsults from Tidal Range Scheme " + trs.title;
-	info = "Time(Hr) WLup(m) WLdown(m) HeadDiff(m) TRSarea(m2) Power(MW) Energy(MWH) QTurb(m3/s) QSluice(m3/s) Mode(-)";
+	title = "Results from Tidal Range Scheme " + trs.title;
+	info = "Time(Hr), WLup(m), WLdown(m), HeadDiff(m), TRSarea(m2), Power(MW), Energy(MWH), QTurb(m3/s), QSluice(m3/s), Mode(-)";
 	modelTimeHr.push_back(time);
 	upstreamWaterLevel.push_back(upstreamWL);
 	downstreamWaterLevel.push_back(downstreamWL);
@@ -787,12 +790,9 @@ int nextMode(const tidalRangeScheme& trs, const results& previous, const double&
 				return 1;
 			}
 		}
-		if (previous.wettedArea.back() <= 0) {
-			return 1;
-		}
 		switch (previous.lagoonMode.back()) {
 		case 1: //Filling/sluicing
-			if (-0.01 <= headDiff <= 0.01) {
+			if (-0.01 <= headDiff && headDiff <= 0.01) {
 				return 2;
 			}
 			else {

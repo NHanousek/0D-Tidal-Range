@@ -25,7 +25,7 @@ int main()
 	
 	mesh.~t3sMesh();
 
-	Area.printScheme("SchemeArea.out");
+	Area.printScheme("Outputs\SchemeArea.out");
 
 	cout << "Initialising results:" << endl;
 	//The current model values at every timestep
@@ -53,7 +53,7 @@ int main()
 	cout << Results.line(0) << endl;
 
 	//FULLY EXPLICIT - EULER MODEL
-	cout << "Starting Simulation:" << endl;
+	//cout << "Starting Simulation:" << endl;
 	for (int i = 1; Results.modelTimeHr.back() < TRS.simTime; i++) {
 		//cout << "Model Time = " << modelTime << " hours" << endl;
 		// Externally driven

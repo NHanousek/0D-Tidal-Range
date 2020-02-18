@@ -9,7 +9,6 @@
 #include "TypesDef.h"
 using namespace std;
 
-
 class tidalRangeScheme {
 public:
 	string source, title;					//metadata
@@ -32,7 +31,6 @@ public:
 
 	double sluiceFlowRate(const double& headDifference); // finds flow rate thrugh sluices using
 														 // orifice equation
-
 };
 
 class t3sMesh {
@@ -71,6 +69,7 @@ public:
 
 	turbines(const tidalRangeScheme& trs, const string& fileName); // constructor
 	turbines();	// error constructor
+	void writeTurbines(const string& fileName); // write scaled turbine info to file
 	double getFlowRate(const double& headDifference, const tidalRangeScheme& trs); // get the flow rate from head difference
 	double getPowerOutput(const double& headDifference, const tidalRangeScheme& trs); // get the power from head difference
 	double getFillingFlow(const double& headDifference); // uses orifice equation
@@ -84,10 +83,11 @@ public:
 	vector<double> level, area; // levels and corresponding areas
 	
 	schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh); // constructor
+	schemeArea(const string& fileName);	// read scheme area from file
 	double getWettedArea(const double& internalWaterLevel);	// uses interpolation
 	double getWaterLevel(const double& wettedArea);
 	double waterLevelFromVolumeChange(const double& initialLevel, const double& volumeChange);	~schemeArea() {}; // destructor
-	void printScheme(const string& fileName);
+	void printScheme(const string& fileName); // write scheme area to a file
 };
 
 class results {
@@ -122,6 +122,8 @@ class modelConfig {
 public: // basically stores all the file names
 	string LagoonFileName, meshFileName, resultsFileName;
 	string externalWaterLevelFileName, turbinesFileName; /*, geneticFileName;*/
+	string schemeAreaFile;
+	int schemeRead;
 	//int genetic;
 	modelConfig(const string& configFileName);
 };
