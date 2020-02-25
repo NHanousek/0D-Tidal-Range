@@ -1,7 +1,7 @@
 Initial Config File For BarraCUDA
-Lagoon: Swansea-Lagoon-Ebb.Dat
-Mesh:	Swansea-Mesh.t3s
-ExternalWaterLevel: Swansea-Timeseries.ts1
-Turbines:	HQPTurbinesNew.dat
-Results:	Swansea-Ebb-Results.csv
+Lagoon: Inputs/R018-NDTL-3x1_5m-2Way.DAT
+Mesh:	Inputs/Mesh-01.t3s
+ExternalWaterLevel: Inputs/NDTL-Timeseries.ts1
+Turbines:	Inputs/HQPTurbinesNew.dat
+Results:	Outputs/R018.csv
 End

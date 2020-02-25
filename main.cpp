@@ -25,7 +25,7 @@ int main()
 	
 	mesh.~t3sMesh();
 
-	Area.printScheme("Outputs\SchemeArea.out");
+	Area.printScheme("Outputs/SchemeArea.out");
 
 	cout << "Initialising results:" << endl;
 	//The current model values at every timestep

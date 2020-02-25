@@ -418,7 +418,7 @@ double schemeArea::getWettedArea(const double& internalWaterLevel) {
 }
 double schemeArea::getWaterLevel(const double& wettedArea) {
 	if (wettedArea == 0) {
-		if (area.front() >= 0) {
+		if (area.front() > 0) {
 			return level.front();
 		}
 		for (int i = 0; i < numPoints; i++) {
@@ -437,7 +437,8 @@ double schemeArea::waterLevelFromVolumeChange(const double& initialLevel, const 
 	if (volumeChange == 0) {
 		return initialLevel;
 	}
-	else if (volumeChange < 0 && volumeChange < (0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel))) {
+	else if (volumeChange < 0 && absolute(volumeChange) > 0.5 * getWettedArea(initialLevel) * (initialLevel - getWaterLevel(0))){
+	//else if (volumeChange < (0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel))) {
 		// if the lagoon is draining and the volume change is more than the remaining lagoon volume
 		return getWaterLevel(0); // the lagoon will rest at empty
 	}
@@ -453,7 +454,7 @@ double schemeArea::waterLevelFromVolumeChange(const double& initialLevel, const 
 		double newVolumeChange(0), newLevel(initialLevel), accuracy(0.001);
 	
 		// initialise upper and lower bound points for the search.
-		double upperLevel(level.back()), lowerLevel(getWaterLevel(0.0));
+		double upperLevel(level.back()), lowerLevel(getWaterLevel(0));
 		// search...
 		while (newVolumeChange < volumeChange - accuracy || volumeChange + accuracy < newVolumeChange ) { // volume change suggested is not volume change desired
 			if (newVolumeChange < volumeChange) {// too low
