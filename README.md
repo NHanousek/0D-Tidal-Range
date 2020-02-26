@@ -33,7 +33,9 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 	- [ ] schemeArea
 	- [ ] External Water Level
 	- [ ] Results
-	- [ ] 
+	- Functions:
+	- [ ] RunModel - the current 'main' as a model
+	- [ ] Get_Outputs - find the key optimisation outputs
 - [ ] Class Lagoon, 
    - Containing:
    - [x] All the basic info about the lagoon itself
