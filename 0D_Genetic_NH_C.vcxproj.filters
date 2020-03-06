@@ -52,15 +52,6 @@
     <None Include="HQPTurbinesNew.dat">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="LagoonNew.Dat">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Mesh-01.t3s">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="NDTL-Timeseries.ts1">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="BarraCUDA.txt">

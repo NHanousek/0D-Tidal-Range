@@ -166,9 +166,6 @@
     <None Include="..\GA_parallel_WSL_flexible_head\src\Model_0D.for" />
     <None Include="..\GA_parallel_WSL_flexible_head\src\Sub_Array and Generals.for" />
     <None Include="HQPTurbinesNew.dat" />
-    <None Include="LagoonNew.Dat" />
-    <None Include="Mesh-01.t3s" />
-    <None Include="NDTL-Timeseries.ts1" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="BarraCUDA.txt" />

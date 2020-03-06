@@ -1,7 +1,7 @@
-Initial Config File For BarraCUDA
-Lagoon: Inputs/R018-NDTL-3x1_5m-2Way.DAT
-Mesh:	Inputs/Mesh-01.t3s
-ExternalWaterLevel: Inputs/NDTL-Timeseries.ts1
-Turbines:	Inputs/HQPTurbinesNew.dat
-Results:	Outputs/R018.csv
+Config File for BarraCUDA: R054 
+Lagoon:	 Inputs/R054-NDTL-3x1500mm-2Wy.DAT 
+Mesh:	 Inputs/Mesh-01.t3s 
+ExternalWaterLevel:	 Inputs/NDTL-Timeseries-360.ts1 
+Turbines:	 Inputs/HQPTurbinesNew.dat 
+Results:	 Outputs/R054-NDTL-3x1500mm-2Wy.csv 
 End

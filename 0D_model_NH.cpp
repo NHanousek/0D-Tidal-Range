@@ -16,6 +16,9 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 	if (lagoonFile.is_open()) {
 		string tmp = "Start";
 
+		double turbCentre = 0.0;
+		double turbCover = 0.0;
+
 		getline(lagoonFile, title);
 		cout << "Reading Lagoon file [" << fileName << "]" << endl;
 		while (tmp != "End") {
@@ -103,14 +106,23 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				lagoonFile >> percentEff;
 				generatorEfficiency = percentEff / 100;
 			}
+			else if (tmp == "turbineCentreLevel(m)=") {
+				lagoonFile >> turbCentre;
+			}
+			else if (tmp == "turbineSafetyCover(m)=") {
+				lagoonFile >> turbCover;
+			}
 			else if (tmp == "End") {
 				cout << "End of Lagoon File." << endl;
+				break;
 			}
 			else {
 
 				cout << "Unrecognised Lagoon Parameter [" << tmp << "] read." << endl;
 			}
 		}
+
+		turbineSoffit = turbCentre + (turbineDiameter / 2.0) + turbCover;
 
 		lagoonFile.close();
 	}
@@ -162,8 +174,8 @@ t3sMesh::t3sMesh(const string& fileName) {
 		for (int j = 0; j <= numberElements; j++) {
 			meshFile >> tmpti3.x >> tmpti3.y >> tmpti3.z;
 			neighbourhood.push_back(tmpti3);
-			elementArea.push_back(areaTriangle(nodePoints[neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].z - 1]));
-			elementHeight.push_back(meanHeight(nodePoints[neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].x - 1]));
+			elementArea.push_back(areaTriangle(nodePoints[(int)neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].z - 1]));
+			elementHeight.push_back(meanHeight(nodePoints[(int)neighbourhood[j].x - 1], nodePoints[neighbourhood[j].y - 1], nodePoints[neighbourhood[j].x - 1]));
 		}
 		tmpti3.~tint3();
 		meshFile.close();
@@ -233,8 +245,8 @@ externalWaterLevel::externalWaterLevel() {
 }
 double externalWaterLevel::getExternalWL(const double& timeNow) {
 	for (int i = 0; i <= (int)time.size()-1; i++) {
-		if (time[i] <= timeNow && timeNow < time[i + 1]) {
-			return interpolate(time[i], timeNow, time[i + 1], level[i], level[i + 1]);
+		if (time[i] <= timeNow && timeNow < time[(int)i + 1]) {
+			return interpolate(time[i], timeNow, time[(int)i + 1], level[i], level[(int)i + 1]);
 		}
 	}
 	return 999;
@@ -389,11 +401,11 @@ schemeArea::schemeArea(const tidalRangeScheme& trs, const t3sMesh& mesh) {
 	double diffLevel = (trs.waterLevelMax - trs.waterLevelMin) / numPoints;
 	//loop through the height points
 	for (int i = 1; i <= numPoints; i++) {
-		area.push_back(area[i-1]);
-		level.push_back(level[i-1] + diffLevel);
+		area.push_back(area[(int)i-1]);
+		level.push_back(level[(int)i-1] + diffLevel);
 		//loop through the elements
 		for (int j = 0; j < mesh.numberElements ; j++) {
-			if (level[i-1] < mesh.elementHeight[j] && mesh.elementHeight[j] <= level[i]) {
+			if (level[(int)i-1] < mesh.elementHeight[j] && mesh.elementHeight[j] <= level[i]) {
 				area[i] += mesh.elementArea[j];
 			}
 		}
@@ -410,8 +422,8 @@ double schemeArea::getWettedArea(const double& internalWaterLevel) {
 	}
 	else {
 		for (int i = 0; i < numPoints; i++) {
-			if (level[i] < internalWaterLevel && internalWaterLevel <= level[i + 1]) {
-				return interpolate(level[i], internalWaterLevel, level[i + 1], area[i], area[i + 1]);
+			if (level[i] < internalWaterLevel && internalWaterLevel <= level[(int)i + 1]) {
+				return interpolate(level[i], internalWaterLevel, level[(int)i + 1], area[i], area[(int)i + 1]);
 			}
 		}
 	}	
@@ -422,14 +434,14 @@ double schemeArea::getWaterLevel(const double& wettedArea) {
 			return level.front();
 		}
 		for (int i = 0; i < numPoints; i++) {
-			if (area[i] <= 0 && area[i + 1] > 0) {
+			if (area[i] <= 0 && area[(int)i + 1] > 0) {
 				return level[i];
 			}
 		}
 	}
 	for (int i = 0; i < numPoints; i++) {
-		if (area[i] < wettedArea && wettedArea <= area[i + 1]) {
-			return interpolate(area[i], wettedArea, area[i + 1], level[i], level[i + 1]);
+		if (area[i] < wettedArea && wettedArea <= area[(int)i + 1]) {
+			return interpolate(area[i], wettedArea, area[(int)i + 1], level[i], level[(int)i + 1]);
 		}
 	}
 }
@@ -627,6 +639,7 @@ modelConfig::modelConfig(const string& configFileName) {
 	}
 }
 
+// NO LONGER USED
 int nextMode(const tidalRangeScheme& trs, const results& previous) {
 	if (trs.schemeType == 1) {
 		// Ebb only - No Pumping
@@ -708,13 +721,22 @@ int nextMode(const tidalRangeScheme& trs, const results& previous) {
 		return 0;
 	}
 }
-int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff) {
+
+int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff, const double& upstream, const double& downstream) {
 	if (trs.schemeType == 1) {
 		// Ebb only - No Pumping
 		//if (previous.wettedArea.back() <= 0) {
 		//	return 1;
 		//}
 		if (previous.wettedArea.back() <= 0.0) {
+			if (headDiff > 0) {
+				return 2;
+			}
+			else {
+				return 1;
+			}
+		}
+		if (upstream < trs.turbineSoffit || downstream < trs.turbineSoffit) {
 			if (headDiff > 0) {
 				return 2;
 			}
@@ -783,7 +805,7 @@ int nextMode(const tidalRangeScheme& trs, const results& previous, const double&
 	else if (trs.schemeType == 2) {
 
 		// Two-way generation - No Pumping
-		if (previous.wettedArea.back() <= 0.0) {
+		if (previous.wettedArea.back() <= 0.0|| upstream < trs.turbineSoffit) {
 			if (headDiff > 0) {
 				return 2;
 			}
@@ -791,9 +813,14 @@ int nextMode(const tidalRangeScheme& trs, const results& previous, const double&
 				return 1;
 			}
 		}
+
+		if (downstream < trs.turbineSoffit) {
+			return 2;
+		}
+		
 		switch (previous.lagoonMode.back()) {
 		case 1: //Filling/sluicing
-			if (-0.01 <= headDiff && headDiff <= 0.01) {
+			if (absolute(headDiff) <= 0.01) {
 				return 2;
 			}
 			else {

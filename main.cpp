@@ -77,7 +77,7 @@ int main()
 		headDiff = upstream - downstream; // up - down.
 
 		// Based on previous step and current head difference
-		trsMode = nextMode(TRS, Results, headDiff); // determine next lagoon mode	
+		trsMode = nextMode(TRS, Results, headDiff, upstream, downstream); // determine next lagoon mode	
 		
 		// Operation mode based
 		if (TRS.schemeType == 1 || TRS.schemeType == 2) {

@@ -1,6 +1,6 @@
-Scheme: Inputs/R018-NDTL-3x1_5m-2Way.DAT
+Scheme: Inputs/R054-NDTL-3x1500mm-2Wy.DAT
 Mesh: Inputs/Mesh-01.t3s
-Lagoon: Title Line Here
+Lagoon: 0D Model Title 
 Level(m)	Area(m2)
 -2	0
 -1.9	0

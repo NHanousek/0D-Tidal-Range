@@ -11,7 +11,7 @@ using namespace std;
 
 class tidalRangeScheme {
 public:
-	string source, title;					//metadata
+	string source = "NaN", title = "NaN";					//metadata
 	double simTime;							// in hours
 	tdouble3 timeStep;						// hours(x), minutes(y), seconds(z) so you dont have to convert
 	tdouble3 timeAdjust;					// time for changing modes h(x) min(y) sec(z)
@@ -24,6 +24,7 @@ public:
 	int numWaterLevelPoints;				// how much should external wl be splt up
 	double sluiceCoefQ, turbineCoefQ;		// discharge coefficients
 	double generatorEfficiency;				// generator efficiency
+	double turbineSoffit;					// top of turbine (m) centre + radius + safety
 
 	tidalRangeScheme(const string& fileName);	// constructor
 	tidalRangeScheme();							// default/error constructor
@@ -123,13 +124,13 @@ public: // basically stores all the file names
 	string LagoonFileName, meshFileName, resultsFileName;
 	string externalWaterLevelFileName, turbinesFileName; /*, geneticFileName;*/
 	string schemeAreaFile;
-	int schemeRead;
+	int schemeRead = 0;
 	//int genetic;
 	modelConfig(const string& configFileName);
 };
 
 //int weTDry(const double& sH, const results& previous);
-int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff);
+int nextMode(const tidalRangeScheme& trs, const results& previous, const double& headDiff, const double& upstream, const double& downstream);
 int nextMode(const tidalRangeScheme& trs, const results& previous);
 //double newUpstreamLevel(const double& oldUpstreamLevel, const double& flowTurbines, const double& flowSluices, const double& inFlow, const schemeArea& area, const tidalRangeScheme& trs);
 

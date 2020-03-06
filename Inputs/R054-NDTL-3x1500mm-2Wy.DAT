@@ -1,12 +1,12 @@
-Title Line Here
-simTime(hrs)= 180
+0D Model Title 
+simTime(hrs)= 360
 timeStep(sec)= 60
 timeAdjust(min)= 10
 schemeType(k)= 2
 turbineType(k)= 1
 numberTurbines(int)= 3
 areaSluices(m2)= 0.0
-turbineDiameter(m)= 1.5
+turbineDiameter(m)= 1.50
 headDiffStart(m)= 2.5
 headDiffEnd(m)=	1.5
 waterLevelMax(m)= 8
