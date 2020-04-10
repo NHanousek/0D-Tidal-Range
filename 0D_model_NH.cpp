@@ -339,7 +339,7 @@ turbines::turbines() {
 	numHPPoints = numHQPoints = 0;
 }
 double turbines::getFlowRate(const double& headDifference, const tidalRangeScheme& trs) {
-	if (headDifference > 0) {
+	if (headDifference > 0) { //Inflow or outflow, for two way generation
 		for (int i = 0; i <= numHQPoints; i++) {
 			if (flowHeadDifference[i] <= headDifference && headDifference <= flowHeadDifference[i + 1]) {
 				return interpolate(flowHeadDifference[i], headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
@@ -356,17 +356,17 @@ double turbines::getFlowRate(const double& headDifference, const tidalRangeSchem
 	return 999;
 }
 double turbines::getPowerOutput(const double& headDifference, const tidalRangeScheme& trs) {
-	if (headDifference > 0) {
+	if (headDifference > 0) {//Inflow or outflow, for two way generation
 		for (int i = 0; i <= numHPPoints; i++) {
 			if (powerHeadDifference[i] <= headDifference && headDifference <= powerHeadDifference[i + 1]) {
-				return interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]);
+				return trs.generatorEfficiency*interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]);
 			}
 		}
 	}
 	else {
 		for (int i = 0; i <= numHPPoints; i++) {
 			if (powerHeadDifference[i] <= -1 * headDifference && -1 * headDifference <= powerHeadDifference[i + 1]) {
-				return (interpolate(powerHeadDifference[i], -1 * headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]));
+				return (trs.generatorEfficiency*interpolate(powerHeadDifference[i], -1 * headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]));
 			}
 		}
 	}

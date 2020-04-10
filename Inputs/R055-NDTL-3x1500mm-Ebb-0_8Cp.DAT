@@ -1,11 +1,11 @@
-0D Model Title 
+0D NDTL - Sluices - NoCutoff - Cd Test 
 simTime(hrs)= 360
 timeStep(sec)= 60
 timeAdjust(min)= 10
-schemeType(k)= 2
+schemeType(k)= 1
 turbineType(k)= 1
 numberTurbines(int)= 3
-areaSluices(m2)= 0.0
+areaSluices(m2)= 10.0
 turbineDiameter(m)= 1.50
 headDiffStart(m)= 2.5
 headDiffEnd(m)=	1.5
@@ -14,7 +14,7 @@ waterLevelMin(m)= -2
 numWaterLevelPoints(int)= 100
 sluiceCoefQ(0-1)= 1.0
 turbineCoefQ(0-1)= 1.0
-generatorEfficiency(%)= 100
-turbineCentreLevel(m)= 0.0
+generatorEfficiency(%)= 80
+turbineCentreLevel(m)= -1.0
 turbineSafetyCover(m)= 0.1
 End

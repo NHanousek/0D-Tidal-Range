@@ -1,6 +1,6 @@
-Scheme: Inputs/R054-NDTL-3x1500mm-2Wy.DAT
+Scheme: Inputs/R055-NDTL-3x1500mm-Ebb-0_8Cp.DAT
 Mesh: Inputs/Mesh-01.t3s
-Lagoon: 0D Model Title 
+Lagoon: 0D NDTL - Sluices - NoCutoff - Cd Test 
 Level(m)	Area(m2)
 -2	0
 -1.9	0
