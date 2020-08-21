@@ -124,7 +124,8 @@ public: // basically stores all the file names
 	string LagoonFileName, meshFileName, resultsFileName;
 	string externalWaterLevelFileName, turbinesFileName; /*, geneticFileName;*/
 	string schemeAreaFile;
-	int schemeRead = 0;
+	bool schemeRead;
+	bool 
 	//int genetic;
 	modelConfig(const string& configFileName);
 };

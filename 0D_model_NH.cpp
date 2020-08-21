@@ -342,14 +342,14 @@ double turbines::getFlowRate(const double& headDifference, const tidalRangeSchem
 	if (headDifference > 0) { //Inflow or outflow, for two way generation
 		for (int i = 0; i <= numHQPoints; i++) {
 			if (flowHeadDifference[i] <= headDifference && headDifference <= flowHeadDifference[i + 1]) {
-				return interpolate(flowHeadDifference[i], headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
+				return trs.turbineCoefQ * interpolate(flowHeadDifference[i], headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
 			}
 		}
 	}
 	else {
 		for (int i = 0; i <= numHQPoints; i++) {
 			if (flowHeadDifference[i] <= -1*headDifference && -1 * headDifference <= flowHeadDifference[i + 1]) {
-				return (-1 * interpolate(flowHeadDifference[i], -1 * headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]));
+				return (-1 * trs.turbineCoefQ * interpolate(flowHeadDifference[i], -1 * headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]));
 			}
 		}
 	}
@@ -359,14 +359,14 @@ double turbines::getPowerOutput(const double& headDifference, const tidalRangeSc
 	if (headDifference > 0) {//Inflow or outflow, for two way generation
 		for (int i = 0; i <= numHPPoints; i++) {
 			if (powerHeadDifference[i] <= headDifference && headDifference <= powerHeadDifference[i + 1]) {
-				return trs.generatorEfficiency*interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]);
+				return trs.generatorEfficiency*trs.turbineCoefQ*interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]);
 			}
 		}
 	}
 	else {
 		for (int i = 0; i <= numHPPoints; i++) {
 			if (powerHeadDifference[i] <= -1 * headDifference && -1 * headDifference <= powerHeadDifference[i + 1]) {
-				return (trs.generatorEfficiency*interpolate(powerHeadDifference[i], -1 * headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]));
+				return (trs.generatorEfficiency* trs.turbineCoefQ * interpolate(powerHeadDifference[i], -1 * headDifference, powerHeadDifference[i + 1], powerOutput[i], powerOutput[i + 1]));
 			}
 		}
 	}
