@@ -1,19 +1,19 @@
 //HEAD_DSCODES
 /*
- <DUALSPHYSICS>  Copyright (c) 2019 by Dr Jose M. Dominguez et al. (see http://dual.sphysics.org/index.php/developers/). 
+ <DUALSPHYSICS>  Copyright (c) 2019 by Dr Jose M. Dominguez et al. (see http://dual.sphysics.org/index.php/developers/).
 
  EPHYSLAB Environmental Physics Laboratory, Universidade de Vigo, Ourense, Spain.
  School of Mechanical, Aerospace and Civil Engineering, University of Manchester, Manchester, U.K.
 
- This file is part of DualSPHysics. 
+ This file is part of DualSPHysics.
 
- DualSPHysics is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License 
+ DualSPHysics is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License
  as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.
- 
- DualSPHysics is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. 
 
- You should have received a copy of the GNU Lesser General Public License along with DualSPHysics. If not, see <http://www.gnu.org/licenses/>. 
+ DualSPHysics is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public License along with DualSPHysics. If not, see <http://www.gnu.org/licenses/>.
 */
 
 /// \file TypesDef.h \brief Declares general types and functions for the entire application.
@@ -21,9 +21,9 @@
 #ifndef _TypesDef_
 #define _TypesDef_
 
-#define PI 3.14159265358979323846      ///<Value of cte PI. 
-#define TWOPI 6.28318530717958647692   ///<Value of cte PI*2. 
-#define PIHALF 1.57079632679489661923  ///<Value of cte PI/2. 
+#define PI 3.14159265358979323846      ///<Value of cte PI.
+#define TWOPI 6.28318530717958647692   ///<Value of cte PI*2.
+#define PIHALF 1.57079632679489661923  ///<Value of cte PI/2.
 #define TORAD 0.017453292519943295769  ///<Constant for conversion to radians. rad=degrees*TORAD (TORAD=PI/180)
 #define TODEG 57.29577951308232087684  ///<Constant for conversion to degrees. degrees=rad*TODEG (TODEG=180/PI)
 
@@ -462,7 +462,7 @@ inline tline2d TLine2d(double a,double b,double c){ tline2d r={a,b,c}; return(r)
 //##############################################################################
 
 ///Basic data types.
-typedef enum{ 
+typedef enum{
   //-DimOfType() -> 0
   TypeNull=0,TypeText=1,TypeBool=2
   //-DimOfType() -> 1
@@ -473,16 +473,16 @@ typedef enum{
   ,TypeFloat =18, TypeDouble =19
   //-DimOfType() -> 2
   ,TypeInt2  =40, TypeUint2  =41
-  ,TypeFloat2=42, TypeDouble2=43 
+  ,TypeFloat2=42, TypeDouble2=43
   //-DimOfType() -> 3
   ,TypeInt3  =60, TypeUint3  =61
-  ,TypeFloat3=62, TypeDouble3=63 
+  ,TypeFloat3=62, TypeDouble3=63
   //-DimOfType() -> 4
   ,TypeInt4  =80, TypeUint4  =81
-  ,TypeFloat4=82, TypeDouble4=83 
+  ,TypeFloat4=82, TypeDouble4=83
   //-DimOfType() -> 6
   ,TypeSyMatrix3f=100
-}TpTypeData; 
+}TpTypeData;
 
 /// Returns data type in text.
 inline const char* TypeToStr(TpTypeData type){
@@ -544,6 +544,8 @@ inline unsigned SizeOfType(TpTypeData type){
     case TypeFloat4:     return(sizeof(tfloat4));
     case TypeDouble4:    return(sizeof(tdouble4));
     case TypeSyMatrix3f: return(sizeof(tsymatrix3f));
+    case TypeNull:       return(0);
+    case TypeText:       return(0);
   }
   return(0);
 }
@@ -554,5 +556,3 @@ inline int DimOfType(TpTypeData type){
 }
 
 #endif
-
-

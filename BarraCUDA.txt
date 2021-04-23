@@ -1,7 +1,0 @@
-Config File for BarraCUDA: R055 == R045 at 0.8Cp
-Lagoon:	 Inputs/R055-NDTL-3x1500mm-Ebb-0_8Cp.DAT 
-Mesh:	 Inputs/Mesh-01.t3s 
-ExternalWaterLevel:	 Inputs/NDTL-Timeseries-360-Corrected.ts1 
-Turbines:	 Inputs/HQPTurbinesNew.dat 
-Results:	 Outputs/R055-NDTL-3x1500mm-Ebb-0_8Cp.csv 
-End
