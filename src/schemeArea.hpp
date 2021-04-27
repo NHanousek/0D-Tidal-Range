@@ -114,7 +114,7 @@ schemeArea::schemeArea( const string& fileName, const double& minLevel, const do
 			} else if (tmp == "Lagoon:") {
 				getline(schm, tmp);
 			} else {
-				cout << "Invalid parameter in schemeArea file.." << endl;
+				cout << "Invalid parameter[" << tmp << "] in schemeArea file.." << endl;
 			}
 		}
 		getline(schm,tmp);

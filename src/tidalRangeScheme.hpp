@@ -44,6 +44,7 @@ private:
 	bool isFlexible = false; // is this a flexibly operated lagoon? defaults to no.
 	bool isPumpFlexible = false; // is there flexing of the pumping start/stop
 	bool isEbbFloodPumpCurves = false; // are there unique curves for ebb and flood and pumping (n==4)
+	bool isParrallelSluice = false; // is there generation during sluicing?
 	string flexVariable = "profit"; // parameter that is maximised in flex mode
 	string flexType = "time"; // how do we decide when to switch
 	string pumpControl = "head"; // time -> Hours of pumping, head -> target head difference
@@ -509,7 +510,11 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 							for (int i = 0; i < numBanks; i++) {
 								switch (flxMode) {
 								case 1: // Filling/sluicing
-									flxPowerOut[i] = 0;
+									if (isParrallelSluice) {
+										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+									} else {
+										flxPowerOut[i] = 0;
+									}
 									if (flxDryUpstream) {
 										if (flxTurbineQ[i] > 0) {
 											flxTurbineQ[i] = 0;
@@ -653,10 +658,16 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	for (int i = 0; i < numBanks; i++ ) {
 		switch (mode) {
 			case 1: // Filling/sluicing
-				powerOut[i] = 0;
+				if (isParrallelSluice) {
+					powerOut[i] = turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+				} else {
+					powerOut[i] = 0;
+				}
 				if (dryUpstream) {
 					if (turbineQ[i] > 0) {
 						turbineQ[i] = 0;
+					} else {
+						turbineQ[i] = turbines[i].orifice(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 					}
 				}
 				else {
@@ -757,6 +768,9 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 			} else if (tmp == "pumping:") {
 				inFile >> tmp;
 				isPumping = boolStr(tmp);
+			} else if (tmp == "parallelSluice:") {
+				inFile >> tmp;
+				isParrallelSluice = boolStr(tmp);
 			} else if (tmp == "flexible:") {
 				inFile >> tmp;
 				isFlexible = boolStr(tmp);
