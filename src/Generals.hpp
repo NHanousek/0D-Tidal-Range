@@ -31,8 +31,8 @@ bool boolStr(const string& str) {
 
 //constant absolute values for ints and doubles
 inline double absolute(const double& input) {
-    if (input < 0) {
-        return (-1 * input);
+    if (input < 0.0) {
+        return (-1.0 * input);
     }
     return input;
 }
@@ -161,8 +161,7 @@ double interpolate(const int& x1, const int& x2, const int& x3, const int& y1, c
     }
 }
 int kronecker(const int& ia, const int& ib) {
-    if (ia == ib) { return 1; }
-    return 0;
+    return (ia == ib);
 }
 double maximum(const double& val1, const double& val2){
     if (val1 > val2) {
@@ -175,5 +174,12 @@ double minimum(const double& val1, const double& val2){
         return val1;
     }
     return val2;
+}
+double trsRamp(const double& simtime, const double& prevswitchtime, const double& ramptime) {
+    if ((simtime - prevswitchtime) < ramptime) {
+        return (1 - cos(3.1415926 * (simtime - prevswitchtime) / ramptime)) / 2;
+    } else {
+        return 1.0;
+    }
 }
 #endif

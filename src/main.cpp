@@ -13,11 +13,16 @@ int main(int argc, char *argv[]){
         cfgFileName = "BarraCUDA.dat";
     } else if (argc == 2){
         cfgFileName = argv[1];
+        if (cfgFileName == "--help"){
+            cout << "Perhaps try emailing Nick? [HanousekN@Cardiff.ac.uk]" << endl
+                 << "or enter your config file name: (default is BarraCUDA.dat)" << endl;
+            cin >> cfgFileName;
+        }
     } else {
         cout << "Too many command line input arguments for this model build." << endl;
         return 1;
     }
-    cout << "BarraCUDA 2.10" << endl;
+    cout << "BarraCUDA 2.12" << endl;
     modelConfig cfg(cfgFileName);
 
 

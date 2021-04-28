@@ -21,7 +21,7 @@ private:
   int numTurbines = 1; // how many distinct turbines are in bank
   double originalDiameter = 1.0;  // original diameter in file
   double turbineDiameters = 1.0; // what diameter is each variety
-  double turbineCenters = 0; // mCD
+  double turbineCenters = -999.0; // mCD
   //turbine turbines; // stores the compiled turbine.
   string turbineFile = "NaN"; // for now it uses just one source file.
   double totalArea = 1.0; // total area of turbines
@@ -120,6 +120,7 @@ turbineBank::turbineBank(const string& fileName, const int& NumTurbines, const d
   } else {
     cout << "Turbine H-Q-P file [" << fileName << "] could not be opened." << endl;
   }
+	cout << "Turbines loaded from [" << fileName << "]" << endl;
 };
 // iterates through the turbine bank and finds the flow rate that matches the head level
 double turbineBank::getFlow(const double& headDifference) {
@@ -127,7 +128,7 @@ double turbineBank::getFlow(const double& headDifference) {
         return 0.0;
     }
     double hd = absolute(headDifference);
-    int sgn = (0 < headDifference) - (headDifference < 0);
+    int sgn = (0 < headDifference) - (headDifference < 0); // -1 if negative, 1 if positive
 
     if (hd < flowHeadDifference.front()) {
         return sgn * numTurbines * flowRate.front();
@@ -136,8 +137,8 @@ double turbineBank::getFlow(const double& headDifference) {
         return sgn * numTurbines * flowRate.back();
     }
     for (int i = 0; i <= flowHeadDifference.size() - 1; i++) {
-        if (flowHeadDifference[i] <= headDifference && headDifference <= flowHeadDifference[i + 1]) {
-            return sgn * numTurbines * interpolate(flowHeadDifference[i], headDifference, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
+        if (flowHeadDifference[i] <= hd && hd <= flowHeadDifference[i + 1]) {
+            return sgn * numTurbines * interpolate(flowHeadDifference[i], hd, flowHeadDifference[i + 1], flowRate[i], flowRate[i + 1]);
         }
     }
     return 0.0;
@@ -148,17 +149,17 @@ double turbineBank::getPower(const double& headDifference) {
         return 0.0;
     }
     double hd = absolute(headDifference);
-    int sgn = (0 < headDifference) - (headDifference < 0);
+    //int sgn = (0 < headDifference) - (headDifference < 0);
 
     if (hd < powerHeadDifference.front()) {
-        return sgn* numTurbines *powerAtHead.front();
+        return numTurbines *powerAtHead.front();
     }
     else if (hd > powerHeadDifference.back()) {
-        return sgn* numTurbines*powerAtHead.back();
+        return numTurbines*powerAtHead.back();
     }
 	for (int i = 0; i <= powerHeadDifference.size() - 1; i++) {
-		if (powerHeadDifference[i] <= headDifference && headDifference <= powerHeadDifference[i + 1]) {
-			return sgn*numTurbines*interpolate(powerHeadDifference[i], headDifference, powerHeadDifference[i + 1], powerAtHead[i], powerAtHead[i + 1]);
+		if (powerHeadDifference[i] <= hd && hd <= powerHeadDifference[i + 1]) {
+			return numTurbines*interpolate(powerHeadDifference[i], hd, powerHeadDifference[i + 1], powerAtHead[i], powerAtHead[i + 1]);
 		}
 	}
     return 0.0;

@@ -83,7 +83,7 @@ private:
   double turbineCd = 1; // discharge coefficient of turbines [0-1]
   double generatorEfficiency = 1; // efficiency of generator [0-1]
   double safetyBuffer = 0.1; // turbine safety buffer level [m]
-  double rampTime = 0.0; // ramping time [hours]
+  double rampTime = 0.25; // ramping time [hours]
 
 public:
 
@@ -154,6 +154,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, const double& hdStart, const double& hdEnd, const double& pmpEnd, const int& mde, const bool& flex) {
 
 	// this is a lambda, it's like a mini function
+	// I think it is creating an issue with the ramp
 	auto upDatePrev = [&]() {
 		if (flex) { flxPrevSwitchTime = timeNow; }
 		else { prevSwitchTime = timeNow; }
@@ -357,10 +358,10 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 						}
 						break;
 					case 3: // Generating
-						if (hde > hds) {
+						if (hde >= hds) {
 							swap(hde,hds);
 						}
-						if (hd <= hde || hd >= hds) {
+						if (hd <= hde) {
 							upDatePrev(); return 1;
 						} else {
 							return 3;
@@ -406,11 +407,6 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 		upStream = externalWaterLevel[0].getLevel(SimTime);
 	} else {
 		upStream = newUpStream;
-	}
-	// ramp function for when changing modes
-	double ramp = 1.0;
-	if ((SimTime - prevSwitchTime) < rampTime) {
-		ramp = (1 - cos(3.1415926 * (SimTime - prevSwitchTime) / rampTime)) / 2;
 	}
 
 	// from the upstream level we can determine the new area
@@ -472,6 +468,9 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 
 						// at every coarse timestep in test period
 						while (flxT < SimTime + flexPeriod) {
+
+							double flxRamp = trsRamp(flxT, flxPrevSwitchTime, rampTime);
+
 							double flxVolumeChange = flxSluiceQ + flxInflow;
 							for (int i = 0; i < numBanks; i++) {
 								flxVolumeChange += flxTurbineQ[i];
@@ -511,7 +510,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 								switch (flxMode) {
 								case 1: // Filling/sluicing
 									if (isParrallelSluice) {
-										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									} else {
 										flxPowerOut[i] = 0;
 									}
@@ -522,8 +521,8 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 										}
 									}
 									else {
-										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									break;
 								case 2: // Holding
@@ -541,8 +540,8 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 										}
 									}
 									else {
-										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									break;
 								case 4: // Pumping
@@ -553,8 +552,8 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 										flxTurbineQ[i] = 0;
 									}
 									else {
-										flxPowerOut[i] = -1 * turbines[i].getPower(flxHeadDiff[i]) * ramp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = -1 * turbines[i].getFlow(flxHeadDiff[i]) * ramp * pumpEff * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxPowerOut[i] = -1 * turbines[i].getPower(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxTurbineQ[i] = -1 * turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * pumpEff * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									break;
 								}
@@ -654,24 +653,25 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 		}
 		mode = 2;
 	}
+	// ramp function for when changing modes
+	double ramp = trsRamp(SimTime, prevSwitchTime, rampTime);
+	//cout << " Ramp: " << ramp << " Mode: " << mode; // comment out once done with
 
 	for (int i = 0; i < numBanks; i++ ) {
 		switch (mode) {
 			case 1: // Filling/sluicing
 				if (isParrallelSluice) {
-					powerOut[i] = turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+					powerOut[i] = turbines[i].getPower(headDiff[i]) * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+					turbineQ[i] = turbines[i].getFlow(headDiff[i]) * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 				} else {
 					powerOut[i] = 0;
+					turbineQ[i] = turbines[i].orifice(headDiff[i]) * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 				}
 				if (dryUpstream) {
 					if (turbineQ[i] > 0) {
 						turbineQ[i] = 0;
-					} else {
-						turbineQ[i] = turbines[i].orifice(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+						powerOut[i] = 0;
 					}
-				}
-				else {
-					turbineQ[i] = turbines[i].orifice(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 				}
 				break;
 			case 2: // Holding
@@ -690,6 +690,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				else {
 					powerOut[i] = turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 					turbineQ[i] = turbines[i].getFlow(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+					//cout << " Power: " << powerOut[i] << " TQ: " << turbineQ[i] << " HD: " << headDiff[i];
 				}
 				break;
 			case 4: // Pumping
@@ -768,7 +769,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 			} else if (tmp == "pumping:") {
 				inFile >> tmp;
 				isPumping = boolStr(tmp);
-			} else if (tmp == "parallelSluice:") {
+			} else if (tmp == "parrallelSluice:" || tmp == "parrallelSluicing:") {
 				inFile >> tmp;
 				isParrallelSluice = boolStr(tmp);
 			} else if (tmp == "flexible:") {
