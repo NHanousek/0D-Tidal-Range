@@ -145,23 +145,23 @@ double turbineBank::getFlow(const double& headDifference) {
 };
 // iterates through the vectors to find the match.
 double turbineBank::getPower(const double& headDifference) {
-    if (headDifference == 0) {
-        return 0.0;
+    if (headDifference == 0.0) {
+      	return 0.000123;
     }
     double hd = absolute(headDifference);
     //int sgn = (0 < headDifference) - (headDifference < 0);
 
     if (hd < powerHeadDifference.front()) {
-        return numTurbines *powerAtHead.front();
+      	return numTurbines * powerAtHead.front();
     }
-    else if (hd > powerHeadDifference.back()) {
-        return numTurbines*powerAtHead.back();
+    else if (hd >= powerHeadDifference.back()) {
+      	return numTurbines * powerAtHead.back();
     }
-	for (int i = 0; i <= powerHeadDifference.size() - 1; i++) {
-		if (powerHeadDifference[i] <= hd && hd <= powerHeadDifference[i + 1]) {
-			return numTurbines*interpolate(powerHeadDifference[i], hd, powerHeadDifference[i + 1], powerAtHead[i], powerAtHead[i + 1]);
+		for (int i = 0; i <= powerHeadDifference.size() - 1; i++) {
+				if (powerHeadDifference[i] <= hd && hd <= powerHeadDifference[i + 1]) {
+						return numTurbines*interpolate(powerHeadDifference[i], hd, powerHeadDifference[i + 1], powerAtHead[i], powerAtHead[i + 1]);
+				}
 		}
-	}
-    return 0.0;
+    return 0.0069;
 };
 #endif

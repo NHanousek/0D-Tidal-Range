@@ -73,6 +73,7 @@ private:
 	double pumpEndMax = 1;		// maximum of pumping control parameter
 	double pumpEndDelta = 0.5;	// step of pumping control parameter
 	double pumpEff = 1.0;		// efficiency of turbine as pump
+	double midTide = 0.0;
 	// scheme area parameters
   double minWaterLevel = 0; // min and max levels for the schemeArea calculation [mCD]
   double maxWaterLevel = 0; // always 100 points between min and max.
@@ -261,7 +262,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 
 				switch (mde) {
 					case 1: // Filling/Sluicing
-						if (hd < 0.05 ) {
+						if (hd < 0.01 ) {
 							upDatePrev(); return 4;
 						} else {
 							return 1;
@@ -270,8 +271,6 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 					case 2: // Holding
 						if (hd >= hds) {
 							upDatePrev(); return 3;
-						} else if (HeadDiff < 0) {
-							upDatePrev(); return 1;
 						} else {
 							return 2;
 						}
@@ -281,7 +280,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 							swap(hde,hds);
 						}
 						if ( hd <= hde ) {
-							upDatePrev(); return 2;
+							upDatePrev(); return 1;
 						} else {
 							return 3;
 						}
@@ -553,7 +552,10 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 									}
 									else {
 										flxPowerOut[i] = -1 * turbines[i].getPower(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = -1 * turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * pumpEff * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxTurbineQ[i] = absolute(turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * pumpEff * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i))*pumpEff);
+										if (flxUpstream >= midTide) {
+											flxTurbineQ[i] *= -1.0;
+										}
 									}
 									break;
 								}
@@ -655,6 +657,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	}
 	// ramp function for when changing modes
 	double ramp = trsRamp(SimTime, prevSwitchTime, rampTime);
+
 	//cout << " Ramp: " << ramp << " Mode: " << mode; // comment out once done with
 
 	for (int i = 0; i < numBanks; i++ ) {
@@ -690,7 +693,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				else {
 					powerOut[i] = turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 					turbineQ[i] = turbines[i].getFlow(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
-					//cout << " Power: " << powerOut[i] << " TQ: " << turbineQ[i] << " HD: " << headDiff[i];
+
 				}
 				break;
 			case 4: // Pumping
@@ -700,8 +703,12 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 					turbineQ[i] = 0;
 				}
 				else {
-					powerOut[i] = -1 * turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
-					turbineQ[i] = -1 * turbines[i].getFlow(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i)) * pumpEff;
+					powerOut[i] = -1.0 * turbines[i].getPower(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i));
+					turbineQ[i] = absolute(turbines[i].getFlow(headDiff[i]) * ramp * kronecker(i, getCurveNumber(headDiff[i], mode, i)) * pumpEff);
+					if (upStream >= midTide) {
+						turbineQ[i] *= -1.0;
+					}
+					cout << " Power: " << powerOut[i] << " TQ: " << turbineQ[i] << " HD: " << headDiff[i] << endl;
 				}
 				break;
 		}
@@ -900,6 +907,8 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				inFile >> pumpEndMax;
 			}else if (tmp == "pumpEndDelta:") {
 				inFile >> pumpEndDelta;
+			}else if (tmp == "midTideLevel(mD)") {
+				inFile >> midTide;
 			}else if (tmp == "flexPumping:") {
 				string tmpS;
 				inFile >> tmpS;
