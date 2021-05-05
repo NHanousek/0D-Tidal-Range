@@ -198,18 +198,18 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 			case 1: // ebb only
 				switch (mde) {
 					case 1: // Filling/Sluicing
-						if (HeadDiff > 0 ) {
+						if (absolute(HeadDiff) <= 0.01 ) {
 							upDatePrev(); return 4;
 						} else {
 							return 1;
 						}
 						break;
 					case 2: // Holding
-						if (HeadDiff >= hds) {
+						if (HeadDiff >= hds && upStream > midTide) {
 							upDatePrev(); return 3;
-						} else if (HeadDiff < 0) {
-							upDatePrev(); return 4;
-						} else {
+						} else if (HeadDiff < 0.0 && upStream < midTide) {
+							upDatePrev(); return 1;
+					  } else {
 							return 2;
 						}
 						break;
@@ -218,7 +218,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 							swap(hde,hds);
 						}
 						if (HeadDiff <= hde) {
-							upDatePrev(); return 4;
+							upDatePrev(); return 2;
 						} else {
 							return 3;
 						}
@@ -708,7 +708,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 					if (upStream >= midTide) {
 						turbineQ[i] *= -1.0;
 					}
-					cout << " Power: " << powerOut[i] << " TQ: " << turbineQ[i] << " HD: " << headDiff[i] << endl;
+					//cout << " Power: " << powerOut[i] << " TQ: " << turbineQ[i] << " HD: " << headDiff[i] << endl;
 				}
 				break;
 		}
@@ -907,7 +907,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				inFile >> pumpEndMax;
 			}else if (tmp == "pumpEndDelta:") {
 				inFile >> pumpEndDelta;
-			}else if (tmp == "midTideLevel(mD)") {
+			}else if (tmp == "midTideLevel(mD):") {
 				inFile >> midTide;
 			}else if (tmp == "flexPumping:") {
 				string tmpS;
