@@ -160,6 +160,9 @@ double interpolate(const int& x1, const int& x2, const int& x3, const int& y1, c
         return (double)y1 + ((double)x2 - (double)x1) * ((double)y3 - (double)y1) / ((double)x3 - (double)x1);
     }
 }
+double extrapolate(const double& x1, const double& x2, const double& x3, const double& y1, const double& y3) {
+    return y1 + (x2 - x1) * (y3 - y1) / (x3 - x1);
+}
 int kronecker(const int& ia, const int& ib) {
     return (ia == ib);
 }

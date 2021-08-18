@@ -151,10 +151,10 @@ void schemeArea::writeScheme(const string& fileName) {
 };
 
 double schemeArea::getWettedArea(const double& internalWaterLevel) {
-	if (internalWaterLevel < level.front()) {
+	if (internalWaterLevel <= level.front()) {
 		return 0; // if the desired level is below the bed level of the tidal range scheme
 	}
-	else if (internalWaterLevel > level.back()) {
+	else if (internalWaterLevel >= level.back()) {
 		return area.back(); //
 	}
 	else {
@@ -178,6 +178,10 @@ double schemeArea::getWaterLevel(const double& wettedArea) {
 			}
 		}
 	}
+	if (wettedArea >= area.back()) {
+		cout << "Area too large of " << wettedArea << " used" << endl;
+		return level.back();
+	}
 	for (int i = 0; i < numPoints; i++) {
 		if (area[i] < wettedArea && wettedArea <= area[i + 1]) {
 			return interpolate(area[i], wettedArea, area[i + 1], level[i], level[i + 1]);
@@ -195,7 +199,11 @@ double schemeArea::newWaterLevel(const double& initialWaterLevel, const double& 
 		// if the lagoon is draining and the volume change is more than the remaining lagoon volume
 		return getWaterLevel(0); // the lagoon will rest at empty
 	}
-	else {
+	else if (volumeChange >= 0.5*(getWettedArea(initialWaterLevel) + getWettedArea(level.back()))*(level.back() - initialWaterLevel)) {
+		cout << "Warning: Scheme possibly overfilled" << endl;
+		double newVolumeChange = volumeChange - 0.5 * (getWettedArea(initialWaterLevel) + getWettedArea(level.back())) * (level.back() - initialWaterLevel);
+		return level.back() + newVolumeChange / getWettedArea(level.back());
+	} else {
 		//Trapezium assumption:
 		/*	volumeChange = (area1 + area2) * (level2 - level1) / 2
 			but, we don't know level or area 2.
@@ -209,6 +217,8 @@ double schemeArea::newWaterLevel(const double& initialWaterLevel, const double& 
 		// initialise upper and lower bound points for the search.
 		double upperLevel(level.back()), lowerLevel(getWaterLevel(0));
 		// search...
+		// If the volume change makes the resulting level bigger than the given maximum this can hang forever,
+		// so...
 		while (newVolumeChange < volumeChange - accuracy || volumeChange + accuracy < newVolumeChange ) { // volume change suggested is not volume change desired
 			if (newVolumeChange < volumeChange) {// too low
 				lowerLevel = newLevel; // bring lower bound up
