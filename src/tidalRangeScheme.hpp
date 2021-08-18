@@ -262,7 +262,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 
 				switch (mde) {
 					case 1: // Filling/Sluicing
-						if (hd < 0.01 ) {
+						if ( hd < 0.01 ) {
 							upDatePrev(); return 4;
 						} else {
 							return 1;
@@ -287,6 +287,28 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 						break;
 						// this is a troubling part because of the ebb/flood component.
 					case 4: // pumping
+						if (pumpControl == "origlevels") {
+							for (int i = 0; i <= pumpTimes.size() - 1; i++) { // this could be slow with longer timeseries
+								if (timeNow >= pumpTimes[i] && timeNow <= pumpTimes[i+1]) {
+									if (pumpTargets[i] > pumpTargets[i + 1]) { // taerget[i] == low, i+1 === high
+										if (upStream < pumpTargets[i]) {
+											upDatePrev(); return 2;
+										} else {
+											return 4;
+										}
+									} else {
+										if (upStream > pumpTargets[i]) {
+											upDatePrev(); return 2;
+										} else {
+											return 4;
+										}
+										break;
+									}
+								}
+							}
+							return 2;
+							break;
+						}
 						if (control >= hpe) {
 							upDatePrev(); return 2;
 						} else {
@@ -595,12 +617,14 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 
 						// test the next pump end level
 						hpe += pumpEndDelta;
+						cout << "+";
 					}
 					// test next head diff end
 					he += headDiffEndDelta;
 				}
 				// test the next head diff start
 				hs += headDiffStartDelta;
+
 			}
 			// set start and end point for the main model based on the optimal
 			// values found int the flex test period

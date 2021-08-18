@@ -2,6 +2,9 @@
 
 ## 0D Modelling of tidal range schemes eventually with a good amount of parallelisation and possibly CUDA too (but mainly because it makes for a cooler name).
 
+### To Do:
+	- Make default setting for energy value in model file "constant"
+
 ### Origins
 Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project.
 
@@ -14,13 +17,13 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   1. Flow from upstream to downstream is positive.
   2. Time: flow calcs to use metres and seconds. Main model clock to use hours. Hours and minutes only for user input and output
   3. If you do it more than twice, make it a function (and really if you do it more than once).
-  4. Try and use consistent patterns and nomenclature between classes and functions. 
-                
+  4. Try and use consistent patterns and nomenclature between classes and functions.
+
                 eg. input files always always given as:
-                
+
                 const string& fileName; // when called in the function input
                 fileName= Lagoon.txt;   // when declared in the main program.
-                
+
   5. use longNamesForThings to make it easier to determine what is being used.
   6. No user input.
   7. Function first, performance next.
@@ -36,7 +39,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 	- Functions:
 	- [ ] RunModel - the current 'main' as a model
 	- [ ] Get_Outputs - find the key optimisation outputs
-- [ ] Class Lagoon, 
+- [ ] Class Lagoon,
    - Containing:
    - [x] All the basic info about the lagoon itself
    - Functions:
@@ -44,7 +47,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - [x] Constructor that takes no inputs, gives error lagoon.
    - [x] Sluice gate flow from orifice equation
    - [ ] (Genetic) functions to modify parameters based on genetic algorithm outputs
-   
+
 - [x] Class Mesh, read directly from a telemac .t3s file ideally
    - Containing:
    - [x] string title or info: give some basic info abut it
@@ -55,7 +58,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - Functions:
    - [x] Constructor that takes filename as input
    - [x] Constructor that takes no inputs
- 
+
  - [x] Class schemeArea, wetted area and water levels for the lagon/barrage
    - Containing:
    - [x] int number of points
@@ -64,7 +67,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - Functions:
    - [x] Constructor that takes in a Lagoon and a Mesh
    - [x] Function that takes water level and returns wetted area
-   
+
 - [x] Class External Water Level, read from a telemac .ts1 file
    - Containing:
   - [x] string title: give some basic title/location
@@ -75,7 +78,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - Functions:
   - [x] Constructor that takes filename as input
   - [x] Constructor that makes a blank error object, from no inputs
-  
+
 - [x] Class Turbines, read from a HQPTurbines file
    - Containing:
   - [x] double originalDiameter: original diameter of turbine
@@ -93,7 +96,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - [x] Constructor that takes filename and Lagoon as input
   - [x] Function that returns flowRate and powerOutput for a given headDifference, filling or generating
   - [ ] (Genetic) functions to modify parameters based on genetic algorithm outputs
-  
+
 - [x] Class Sluices, built from lagoon info **DECIDED THIS CLASS IS UNNECESSARY**
    - Containing:
   - [ ] double areaSluices: the total area of the cluices
@@ -101,7 +104,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   - Functions:
   - [ ] Constructor that takes Lagoon Data as input
   - [ ] Function that returns flow rate through them from head discharge (orifice equation)
-  
+
  - [ ] Class Results, the working outputs of the model
     - Containing:
    - [x] double array time: Time of model
@@ -120,49 +123,49 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
    - [x] printing to console, one line or full results
    - [x] printing to file, one line or full results
    - [x] functions to add new data as it is calculated
- 
+
 ## Approximate flow of model
 1. Declarations and definitions
 2. read a config file that pulls all the individual filenames together
-  
+
     i. Initialise lagoon
-  
+
     ii. Initialise mesh
-  
+
     iii. Initialise turbines
-  
+
     iv. Initialise external water level
-  
+
 3. check input parameters for bad inputs
 4. initialise results parameters
 5. Initialise modeling
 6. if (generation == ebb only) {
   - mode will progress: hold -> fill -> hold -> generate -> hold -> fill
-  
+
         }
-  
+
 7. if (generation == two way) {
   - mode will progress: fill -> hold -> generate -> sluice -> hold -> generate -> fill
-  
+
         }
-  
+
 8. Different modes will affect the behaviour differently:
-   
+
    i. Holding:
    - turbineFlow = sluiceFlow = 0
    - internal water level = constant (unless seperate inflow)
-   
+
    ii. Filling:
    - turbine flow = 0
    - external water level > internal water level
    - lagoon is filling up
    - tide is in flood movement
-   
+
    iii. Generating
-   - turbine flow > 0 
+   - turbine flow > 0
    - head difference between levels is within desired range
    - water level in lagoon is changing depending on the ebb/flood state
-   
+
    iv. Sluicing
    - turbine flow = 0
    - lagoon is emptying
