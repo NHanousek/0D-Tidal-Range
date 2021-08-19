@@ -397,6 +397,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 		}
 	}
 	//system("pause");
+	cout << "Tidal range scheme attempted invalid mode..." << endl;
 	return 0;
 }
 
@@ -607,6 +608,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 							flxInflow = inFlow.getLevel(flxT);
 							flxT += flexDt;
 						}
+						cout << "+";
 						// save the values found in this sample
 						flxHs.push_back(hs);
 						flxHe.push_back(he);
@@ -617,10 +619,11 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 
 						// test the next pump end level
 						hpe += pumpEndDelta;
-						cout << "+";
+
 					}
 					// test next head diff end
 					he += headDiffEndDelta;
+
 				}
 				// test the next head diff start
 				hs += headDiffStartDelta;
@@ -977,7 +980,9 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 		headDiffStart = (headDiffStartMin + headDiffStartMax) / 2;
 		headDiffEnd = (headDiffEndMin + headDiffEndMax) / 2;
 		pumpEnd = (pumpEndMin + pumpEndMax) / 2;
-
+		if (pumpEndMin > pumpEndMax) {
+			swap(pumpEndMin, pumpEndMax);
+		}
 		ofstream flexInfo;
 		string flxName = schemeName + "_flx_Info.csv";
 		flexInfo.open(flxName);

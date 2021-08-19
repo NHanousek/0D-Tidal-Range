@@ -146,7 +146,7 @@ double turbineBank::getFlow(const double& headDifference) {
 // iterates through the vectors to find the match.
 double turbineBank::getPower(const double& headDifference) {
     if (headDifference == 0.0) {
-      	return 0.000123;
+      	return 0.0;
     }
     double hd = absolute(headDifference);
     //int sgn = (0 < headDifference) - (headDifference < 0);
@@ -162,6 +162,6 @@ double turbineBank::getPower(const double& headDifference) {
 						return numTurbines*interpolate(powerHeadDifference[i], hd, powerHeadDifference[i + 1], powerAtHead[i], powerAtHead[i + 1]);
 				}
 		}
-    return 0.0069;
+    return 0.0;
 };
 #endif

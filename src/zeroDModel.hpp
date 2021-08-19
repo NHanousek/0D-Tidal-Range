@@ -94,7 +94,7 @@ void zeroDModel::run() {
 
 	while (simTime < maxTime) {
 		if (printFullResults) {
-			cout << " Time: " << simTime << endl;
+				cout << " Time: " << simTime << " Hrs    Mode: " << mode[0] << endl;
 		}
 		simTime += timeStep;
 

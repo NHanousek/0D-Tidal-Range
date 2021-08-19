@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
         cout << "Too many command line input arguments for this model build." << endl;
         return 1;
     }
-    cout << "BarraCUDA 2.12" << endl;
+    cout << "BarraCUDA 2.15" << endl;
     modelConfig cfg(cfgFileName);
 
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]){
         zeroDModel model(cfg);
         model.run();
         //model.writeResults(cfg.runResultsFileName);
-        cout << "All done!" << endl;
     }
+    cout << "All done!" << endl;
     return 0;
 }
