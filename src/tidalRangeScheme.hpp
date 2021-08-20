@@ -447,6 +447,12 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 			vector<double> flxHpe; // pump end
 			vector<double> flxProf; // profit
 
+			ofstream tmp_f;
+			//string tmp_fname = "flx_" + to_string(he) + "_" + to_string(hs) + "_tmp.csv";
+			string tmp_fname = "flx_"+to_string(SimTime)+"_tmp.csv";
+			tmp_f.open(tmp_fname);
+			//tmp_f << "Time[Hrs],US[mCD],US[mCD],power[MW],turbQ[m3/s],SlQ[m3/s],Mode[-],flxProd[-],flxdV[m3]" << endl;
+			tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
 			// starting head
 			double hs = headDiffStartMin;
 			//double prevHs = headDiffStart; double prevHe = headDiffEnd;
@@ -483,10 +489,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 						vector<double> flxTurbineQ = turbineQ;
 						vector<double> flxHeadDiff = headDiff;
 						vector<double> flxPowerOut = powerOut;
-                        //ofstream tmp_f;
-                        //string tmp_fname = "flx_" + to_string(he) + "_" + to_string(hs) + "_tmp.csv";
-                        //tmp_f.open(tmp_fname);
-                        //tmp_f << "Time[Hrs],US[mCD],US[mCD],power[MW],turbQ[m3/s],SlQ[m3/s],Mode[-],flxProd[-],flxdV[m3]" << endl;
+
 
 						// at every coarse timestep in test period
 						while (flxT < SimTime + flexPeriod) {
@@ -533,18 +536,19 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 								case 1: // Filling/sluicing
 									if (isParrallelSluice) {
 										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									} else {
 										flxPowerOut[i] = 0;
+										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									if (flxDryUpstream) {
 										if (flxTurbineQ[i] > 0) {
 											flxTurbineQ[i] = 0;
 											flxSluiceQ = 0;
+											flxPowerOut[i] = 0;
 										}
-									}
-									else {
-										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									break;
 								case 2: // Holding
@@ -604,7 +608,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 									flxProduct = flxMax - flxMin;
 								}
 							}
-                            //tmp_f <<  flxT<<","<<flxUpstream<<","<<flxDownStream[0]<<","<<flxPowerOut[0]<<","<<flxTurbineQ[0]<<","<<flxSluiceQ<<","<<flxMode<<","<<flxProduct << "," << flxVolumeChange << endl;
+              //tmp_f <<  flxT<<","<<flxUpstream<<","<<flxDownStream[0]<<","<<flxPowerOut[0]<<","<<flxTurbineQ[0]<<","<<flxSluiceQ<<","<<flxMode<<","<<flxProduct << "," << flxVolumeChange << endl;
 							flxInflow = inFlow.getLevel(flxT);
 							flxT += flexDt;
 						}
@@ -616,7 +620,8 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 
 						flxProf.push_back(flxProduct);
                         //tmp_f.close();
-
+						//tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
+						tmp_f << hs << "," << he << "," << hpe << "," << flxProduct << endl;
 						// test the next pump end level
 						hpe += pumpEndDelta;
 
@@ -629,6 +634,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				hs += headDiffStartDelta;
 
 			}
+			tmp_f.close();
 			// set start and end point for the main model based on the optimal
 			// values found int the flex test period
 			double tmp_maxV = maxVal(flxProf);

@@ -24,7 +24,7 @@ timeSeries::timeSeries(const string& fileName) {
 	// the filename can be passed as "false" or "none" and
 	// the value is set constant at 0 for 1 million hours
 	// if your model runs longer than that, change this.
-	if (fileName == "False" || fileName == "false" || fileName == "none" || fileName == "None") {
+	if (fileName == "False" || fileName == "false" || fileName == "none" || fileName == "None" || fileName == "zero") {
 		source = "constantZero"; // reminder for debugging, encodes for quick returns
 		numReadings = 2;
 		timeStep = 1;
