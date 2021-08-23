@@ -447,12 +447,12 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 			vector<double> flxHpe; // pump end
 			vector<double> flxProf; // profit
 
-			ofstream tmp_f;
+			//ofstream tmp_f;
 			//string tmp_fname = "flx_" + to_string(he) + "_" + to_string(hs) + "_tmp.csv";
-			string tmp_fname = "flx_"+to_string(SimTime)+"_tmp.csv";
-			tmp_f.open(tmp_fname);
+			//string tmp_fname = "flx_"+to_string(SimTime)+"_tmp.csv";
+			//tmp_f.open(tmp_fname);
 			//tmp_f << "Time[Hrs],US[mCD],US[mCD],power[MW],turbQ[m3/s],SlQ[m3/s],Mode[-],flxProd[-],flxdV[m3]" << endl;
-			tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
+			//tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
 			// starting head
 			double hs = headDiffStartMin;
 			//double prevHs = headDiffStart; double prevHe = headDiffEnd;
@@ -501,7 +501,15 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 								flxVolumeChange += flxTurbineQ[i];
 							}
 							flxVolumeChange *= -1 * (flexDt * 60 * 60);
-							flxUpstream = trsArea.newWaterLevel(flxUpstream, flxVolumeChange);
+							double flxNewUpstream = trsArea.newWaterLevel(flxUpstream, flxVolumeChange);
+
+							if ((flxUpstream > flxDownStream[0] && flxNewUpstream < externalWaterLevel[0].getLevel(flxT)) ||
+								(flxUpstream < flxDownStream[0] && flxNewUpstream > externalWaterLevel[0].getLevel(flxT))) {
+								flxUpstream = externalWaterLevel[0].getLevel(flxT);
+							}
+							else {
+								flxUpstream = flxNewUpstream;
+							}
 
 							// run the model as if it were fixed head.
 							bool flxSafetyHold = false;
@@ -537,16 +545,16 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 									if (isParrallelSluice) {
 										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										//flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									} else {
 										flxPowerOut[i] = 0;
 										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
+										//flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
 									}
 									if (flxDryUpstream) {
 										if (flxTurbineQ[i] > 0) {
 											flxTurbineQ[i] = 0;
-											flxSluiceQ = 0;
+											//flxSluiceQ = 0;
 											flxPowerOut[i] = 0;
 										}
 									}
@@ -554,7 +562,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 								case 2: // Holding
 									flxPowerOut[i] = 0;
 									flxTurbineQ[i] = 0;
-									flxSluiceQ = 0;
+									//flxSluiceQ = 0;
 									break;
 								case 3: // Generating
 									flxSluiceQ = 0;
@@ -586,7 +594,12 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 									}
 									break;
 								}
-
+								if (flxMode == 1) {
+									flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp;
+								}
+								else {
+									flxSluiceQ = 0.0;
+								}
 								// here it optimises based on the desired parameter
 								// if you want to add more, you can copy/use the methods from
 								// the existing two, and add them to the if-else tree.
@@ -621,7 +634,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 						flxProf.push_back(flxProduct);
                         //tmp_f.close();
 						//tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
-						tmp_f << hs << "," << he << "," << hpe << "," << flxProduct << endl;
+					//tmp_f << hs << "," << he << "," << hpe << "," << flxProduct << endl;
 						// test the next pump end level
 						hpe += pumpEndDelta;
 
@@ -634,13 +647,15 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				hs += headDiffStartDelta;
 
 			}
-			tmp_f.close();
+			//tmp_f.close();
 			// set start and end point for the main model based on the optimal
 			// values found int the flex test period
 			double tmp_maxV = maxVal(flxProf);
 			int tmp_i_mV = iOfMaxVal(flxProf);
 
-			if ((maxVal(flxProf) >= 0.001) && (flexVariable == "energy" || flexVariable == "Energy"|| flexVariable == "profit"|| flexVariable == "Profit")) {
+			if ((tmp_maxV >= 0.001) && (flexVariable == "energy" || flexVariable == "Energy"||
+										flexVariable == "profit"|| flexVariable == "Profit" ||
+										flexVariable == "intertidal" || flexVariable == "Intertidal")) {
 				int mxv = iOfMaxVal(flxProf);
 				headDiffStart = flxHs[mxv];
 				headDiffEnd = flxHe[mxv];
@@ -804,6 +819,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 					operation = 2;
 				} else {
 					cout << "Invalid operation mode [" << tmp <<  "] entered in: " << fileName << endl;
+					//bcError(string("Invalid operation mode [" + tmp + "] entered in: " + fileName));
 					//system("pause");
 				}
 			} else if (tmp == "pumping:") {
@@ -959,6 +975,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				cout << "PLEASE REMEMBER THAT YOU MUST SUPPLY BOTH EBB AND FLOOD/PUMP AND GENERATION CURVE FILES" << endl;
 			}else {
 				cout << "Invalid parameter <" << tmp << "> in [" << fileName << "] ..."<< endl;
+				//bcError(string("Invalid parameter <" + tmp + "> in [" + fileName + "] ..."));
 				//system("pause");
 			}
 		}
@@ -980,6 +997,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 	if (isEbbFloodPumpCurves) {
 		if (numBanks != 4) {
 			cout << "WARNING: <" << numBanks << "> should be 4 for Ebb/Flood Generating/Pumping curve combos." << endl;
+			bcError(string("WARNING: <" + to_string(numBanks) + "> should be 4 for Ebb/Flood Generating/Pumping curve combos."));
 		}
 	}
 	if (isFlexible) {

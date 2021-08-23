@@ -152,7 +152,7 @@ void schemeArea::writeScheme(const string& fileName) {
 
 double schemeArea::getWettedArea(const double& internalWaterLevel) {
 	if (internalWaterLevel <= level.front()) {
-		cout << "Warning: Possible dry scheme" << endl;
+		//bcError("Warning: Possible dry scheme");
 		return 0.0; // if the desired level is below the bed level of the tidal range scheme
 	}
 	else if (internalWaterLevel >= level.back()) {

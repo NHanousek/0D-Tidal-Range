@@ -15,6 +15,19 @@ const double pi = 3.14159265359;    // very accurate. very good.
 const double Pi = 3.14159265359;    // so that i don't need to remember if its caps.
 const double g = 9.807;             // Gravity
 
+void bcError(const string& str, const bool& first = false) {
+    ofstream errfile;
+    if (first) {
+        errfile.open("Barra.err");
+        errfile << "Errors from BarraCUDA" << endl;
+    } else {
+        errfile.open("Barra.err", ofstream::app);
+    }
+    errfile << str << endl;
+    errfile.close();
+    
+}
+
 bool boolStr(const string& str) {
     if (str == "true" || str == "TRUE" || str == "True" || str == "yes" || str == "Yes" || str == "YES" || str == "Y") {
         return true;
@@ -102,7 +115,7 @@ double minVal(const vector<double>& vect) {
 double maxVal(const vector<double>& vect) {
     double vMax = vect[0];
     for (int i = 0; i < vect.size(); i++) {
-        if (vect[i] > vMax) {
+        if (vect[i] >= vMax) {
             vMax = vect[i];
         }
     }
