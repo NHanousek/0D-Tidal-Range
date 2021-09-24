@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
         cout << "Too many command line input arguments for this model build." << endl;
         return 1;
     }
-    cout << "BarraCUDA 2.15" << endl;
+    cout << "BarraCUDA 2.16" << endl;
     modelConfig cfg(cfgFileName);
 
 
