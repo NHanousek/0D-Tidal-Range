@@ -5,7 +5,9 @@
 ### Compilation with g++
 The easiest way to compile the model on Mac/Linux, available on Windows as well (other options are available). All source files are in the src/ directory.
 	
-	$g++ -std=c++11 main.cpp -o BarraCUDA.exe
+	$g++ -std=c++11 main.cpp -o BarraCUDA.out
+
+(Use BarraCUDA.exe on Windows)
 
 ### To Do:
 	- Improve documentation...
