@@ -815,7 +815,7 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				inFile >> tmp;
 				if (tmp == "Ebb"||tmp == "ebb"||tmp == "Ebb-Only"||tmp == "ebb-only"||tmp == "1"){
 					operation = 1;
-				} else if (tmp == "Two-Way"||tmp == "two-way"||tmp == "2wy"||tmp == "2Way"||tmp == "2way"||tmp == "2"){
+				} else if (tmp == "Two-Way"||tmp == "two-way"||tmp == "2wy"||tmp == "2Way"||tmp == "2way"||tmp == "2"|| tmp == "2WY"){
 					operation = 2;
 				} else {
 					cout << "Invalid operation mode [" << tmp <<  "] entered in: " << fileName << endl;
