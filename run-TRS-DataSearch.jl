@@ -1,5 +1,5 @@
 # run all three schemes for a variety of conditions
-# The big bad script that runs many many 
+# The big bad script that runs many many models
 using CSV, DataFrames, Dates, BayesOpt
 cd("/Users/nicolashanousek/Documents/0D/AncilliaryServices/model.nosync/")
 function is_in(vect, val)
@@ -15,7 +15,7 @@ function makedir(directoryName::String,force=false)
         #msg = "directory $(pwd())/$directoryName already exists"
         if force
             rm(directoryName)
-            mkdir(directoryName)    
+            mkdir(directoryName)
             msg = "$msg -> Forced Overwrite"
         end
         #@warn(msg)
@@ -35,7 +35,7 @@ struct TRS
     nTurb::Int64        # Number of turbines
     dTurb::Float64      # Diameter of turbine (m)
     aSluice::Float64    # Total Area of sluice
-    wlFile::String      # Water level input file 
+    wlFile::String      # Water level input file
 end
 
 struct trsTime
@@ -59,7 +59,7 @@ IOL = TRS("IOL","Idealised Offshore",4.4,1.8,1.0,"EBB",100,8.0,10000,"IOL-Long-2
 schemes = [WSL, MTB]#, IOL]
 
 flxNames = Dict(
-    "BSF" => "Base Fixed", 
+    "BSF" => "Base Fixed",
     # Each of these for pump & non-pump X Energy & Power
     "BYF" => "Bayes Optimal Fixed",
     "ET" => "Every Tide",
@@ -135,7 +135,7 @@ for schm in schemes
             elseif flex.flexible
                 pumps = ["NP", "FP"]
             end
-                
+
             for pmp in pumps
                 # Parrallel sluicing and serial sluicing
                 parSluice = Dict("PS" => true,"SS" => false)
@@ -150,7 +150,7 @@ for schm in schemes
                         modelName = "$(schm.code)-$(flex.name)-$op-$pmp-$sps-$targ"
 
                         # build the model run function
-                        function zdRun(param,optimiser=true)    
+                        function zdRun(param,optimiser=true)
                             B_fname = "$modelName-BC.dat"
                             schm_name = "$modelName.dat"
                             bcf = open(B_fname,"w")
@@ -252,7 +252,7 @@ for schm in schemes
                                 "End\n"
                                 )
                             close(schmf)
-                            run(pipeline(`./../BarraCUDA.out $(B_fname)`, 
+                            run(pipeline(`./../BarraCUDA.out $(B_fname)`,
                                 stdout="$(modelName)_out.txt", stderr="$(modelName)_err.txt"))
                             dfm = CSV.File("$(modelName)_results.csv") |> DataFrame
                             energy = dfm[end,"energy[MWh]"]
@@ -304,8 +304,8 @@ for schm in schemes
 
                             if flex.Params == "HSE"
                                 if pmp == "NP" # no pumping
-                                    upper = [8.5 3.5] # head diff: start end 
-                                    lower = [4.0 0.0] # head diff: start end 
+                                    upper = [8.5 3.5] # head diff: start end
+                                    lower = [4.0 0.0] # head diff: start end
                                 else
                                     upper = [8.5 3.5 3.0] # head diff: start end pump
                                     lower = [4.0 0.0 0.0] # head diff: start end pump
