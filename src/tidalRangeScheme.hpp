@@ -16,6 +16,7 @@
 #include "schemeArea.hpp"
 #include "timeSeries.hpp"
 #include "Generals.hpp"
+#include "Ancillary.hpp"
 
 using namespace std;
 
@@ -85,6 +86,12 @@ private:
   double generatorEfficiency = 1; // efficiency of generator [0-1]
   double safetyBuffer = 0.1; // turbine safety buffer level [m]
   double rampTime = 0.25; // ramping time [hours]
+
+	// Ancillary services parameters
+	bool isAncillary = false; // is the scheme operating as an ancillary service device?
+	int ancMode = 0; // control mode of ancillary services operation
+	double ancPrice = 0.0; // Price generated over timestep by ancillary operation
+	ancType ancOp; // control parameters of the ancillary service operation
 
 public:
 
@@ -973,6 +980,13 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				inFile >> tmpS;
 				isEbbFloodPumpCurves = boolStr(tmpS);
 				cout << "PLEASE REMEMBER THAT YOU MUST SUPPLY BOTH EBB AND FLOOD/PUMP AND GENERATION CURVE FILES" << endl;
+			} else if (tmp == "ancillaryServices:" || tmp == "AncillaryServices:") {
+				string tmpS;
+				inFile >> tmpS;
+				isAncillary = boolStr(tmpS);
+			} else if (tmp == "ancillaryFile:" || tmp == "AncillaryFile:") {
+				inFile >> tmp;
+				ancOp = ancType(tmp);
 			}else {
 				cout << "Invalid parameter <" << tmp << "> in [" << fileName << "] ..."<< endl;
 				//bcError(string("Invalid parameter <" + tmp + "> in [" + fileName + "] ..."));

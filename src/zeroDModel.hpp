@@ -49,6 +49,8 @@ public:
 	vector<double> sluiceQ;			// flow rate through sluices (m3/s)
 	vector<int> mode;						// operating mode
 
+	// vector<int> ancMode;				// ancillary services mode
+	// vector<double> andPrice;		// ancillary services price/time
 };
 
 //------------------IMPLEMENTATIONS------------------//

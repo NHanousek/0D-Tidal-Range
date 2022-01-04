@@ -16,6 +16,13 @@ You will be paid rA for the time you are available,
 and rG for all the energy you generate in this period.
 
 You must determine if it's worth operating only based on the rA×H
+
+TRS in ancillary potential operation will have a number of modes:
+0	= Not operating for Ancillary services ouput
+1 = Preparing to run in ancillary mode
+2 = Available to generate
+3 = Generating
+4 = Post generation recovery
 */
 class ancType {
 public:
