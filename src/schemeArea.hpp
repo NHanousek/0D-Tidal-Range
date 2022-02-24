@@ -21,16 +21,17 @@ private:
   vector<double> area; // vector of areas
 
 public:
-  string title = "NaN"; // file name of input
-  double minInternalLevel = 0.0; // point with area = 0.
-  schemeArea() = default;
-  schemeArea(const string& fileName, const double& minLevel, const double& maxLevel); // constructor, works differently depending on filetype
-  double getWettedArea(const double& level); // return area at a given level
-  double getWaterLevel(const double& area); // return level for a given area
-  double newWaterLevel(const double& initialWaterLevel, const double& volumeChange); // volume change, via trapezium rule
-  void writeScheme(const string& fileName); // should write a scheme that the constructor can read
-  inline bool dry(const double& checkLevel) { return (checkLevel <= minInternalLevel); }; // returns true if dry, false if wet.
-  ~schemeArea() {}; // destructor
+int prevWLi = 1; // index of previous water level index point...
+	string title = "NaN"; // file name of input
+	double minInternalLevel = 0.0; // point with area = 0.
+	schemeArea() = default;
+	schemeArea(const string& fileName, const double& minLevel, const double& maxLevel); // constructor, works differently depending on filetype
+	double getWettedArea(const double& level, int& prevWLi); // return area at a given level
+	double getWaterLevel(const double& area); // return level for a given area
+	double newWaterLevel(const double& initialWaterLevel, const double& volumeChange); // volume change, via trapezium rule
+	void writeScheme(const string& fileName); // should write a scheme that the constructor can read
+	inline bool dry(const double& checkLevel) { return (checkLevel <= minInternalLevel); }; // returns true if dry, false if wet.
+	~schemeArea() {}; // destructor
 };
 schemeArea::schemeArea( const string& fileName, const double& minLevel, const double& maxLevel) {
 	string fileExt = ".";
@@ -150,17 +151,21 @@ void schemeArea::writeScheme(const string& fileName) {
 	}
 };
 
-double schemeArea::getWettedArea(const double& internalWaterLevel) {
+double schemeArea::getWettedArea(const double& internalWaterLevel, int& prevWLi) {
+	if (level[prevWLi] < internalWaterLevel && internalWaterLevel <= level[prevWLi + 1]) {
+		return interpolate(level[prevWLi], internalWaterLevel, level[prevWLi + 1], area[prevWLi], area[prevWLi + 1]);
+	}
 	if (internalWaterLevel <= level.front()) {
 		//bcError("Warning: Possible dry scheme");
 		return 0.0; // if the desired level is below the bed level of the tidal range scheme
 	}
 	else if (internalWaterLevel >= level.back()) {
-		return area.back(); //
-	}
+		return area.back(); // if the water is bigger than the biggest level, return the biggest area.
+	} 
 	else {
 		for (int i = 0; i < numPoints; i++) {
 			if (level[i] < internalWaterLevel && internalWaterLevel <= level[i + 1]) {
+				prevWLi = i;
 				return interpolate(level[i], internalWaterLevel, level[i + 1], area[i], area[i + 1]);
 			}
 		}
@@ -192,18 +197,21 @@ double schemeArea::getWaterLevel(const double& wettedArea) {
 };
 
 double schemeArea::newWaterLevel(const double& initialWaterLevel, const double& volumeChange){ // volume change, via trapezium rule
+	// minimize calls to the getWettedArea function as it's pretty slow
+	double initArea = getWettedArea(initialWaterLevel, prevWLi);
 	if (volumeChange == 0) {
 		return initialWaterLevel;
 	}
-	else if (volumeChange < 0 && absolute(volumeChange) > 0.5 * getWettedArea(initialWaterLevel) * (initialWaterLevel - getWaterLevel(0))){
+	else if (volumeChange < 0 && absolute(volumeChange) > 0.5 * initArea * (initialWaterLevel - getWaterLevel(0))){
 	//else if (volumeChange < (0.5 * (getWettedArea(initialLevel) + 0) * (getWaterLevel(0) - initialLevel))) {
 		// if the lagoon is draining and the volume change is more than the remaining lagoon volume
 		return getWaterLevel(0); // the lagoon will rest at empty
 	}
-	else if (volumeChange >= 0.5*(getWettedArea(initialWaterLevel) + getWettedArea(level.back()))*(level.back() - initialWaterLevel)) {
+	double maxArea = getWettedArea(level.back(), prevWLi);
+	if (volumeChange >= 0.5*(initArea + maxArea)*(level.back() - initialWaterLevel)) {
 		cout << "Warning: Scheme possibly overfilled" << endl;
-		double newVolumeChange = volumeChange - 0.5 * (getWettedArea(initialWaterLevel) + getWettedArea(level.back())) * (level.back() - initialWaterLevel);
-		return level.back() + newVolumeChange / getWettedArea(level.back());
+		double newVolumeChange = volumeChange - 0.5 * (initArea + maxArea) * (level.back() - initialWaterLevel);
+		return level.back() + newVolumeChange / maxArea;
 	} else {
 		//Trapezium assumption:
 		/*	volumeChange = (area1 + area2) * (level2 - level1) / 2
@@ -212,11 +220,17 @@ double schemeArea::newWaterLevel(const double& initialWaterLevel, const double& 
 			(because there are area-level functions for that)
 			So we must rearrange the equation, and iterate to find the solution...
 			this may make the model quite slow, but I think it's more accurate
-			and it allows for wetting and drying.		N. Hanousek */
-		double newVolumeChange(0), newLevel(initialWaterLevel), accuracy(0.001);
+			and it allows for wetting and drying.		N. Hanousek
+			UPDATE 24/02/2022: Yes, this function is the slowest part of the model, 
+			with getWettedArea() taking a lot of computation too. NH */
+		double accuracy = 1; // accuracy here is to as cubic meter of water over the timestep, 
+							 // it can be smaller but the slowdown is huge with this parameter 
+		double newLevel = initialWaterLevel + volumeChange / initArea; // not a terrible first estimate...
+		double newVolumeChange = 0.5 * (initArea + getWettedArea(newLevel, prevWLi)) * (newLevel - initialWaterLevel);
 
 		// initialise upper and lower bound points for the search.
-		double upperLevel(level.back()), lowerLevel(getWaterLevel(0));
+		double upperLevel(level.back()), lowerLevel(getWaterLevel(0)); // can we do better than this?..
+
 		// search...
 		// If the volume change makes the resulting level bigger than the given maximum this can hang forever,
 		// so...
@@ -228,7 +242,7 @@ double schemeArea::newWaterLevel(const double& initialWaterLevel, const double& 
 				upperLevel = newLevel; // bring upper bound down
 			}
 			newLevel = (lowerLevel + upperLevel) / 2;
-			newVolumeChange = 0.5 * (getWettedArea(initialWaterLevel) + getWettedArea(newLevel)) * (newLevel - initialWaterLevel);
+			newVolumeChange = 0.5 * (initArea + getWettedArea(newLevel, prevWLi)) * (newLevel - initialWaterLevel);
 		}
 		return newLevel;
 	}

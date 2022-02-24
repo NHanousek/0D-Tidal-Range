@@ -7,6 +7,7 @@
 using namespace std;
 
 class timeSeries {
+	int prevTSi = 1;
 public:
     int numReadings = 0;
     double timeStep = 0;
@@ -90,9 +91,14 @@ double timeSeries::getLevel(const double& timeNow) {
 	}
 	// for every step, if the time specified is between two time points, or
 	// at a time point, interpolate between the specified times.
-	for (int i = 0; i < (int)time.size(); i++) {
-		if (time[i] <= timeNow && timeNow < time[i + 1]) {
-			return interpolate(time[i], timeNow, time[i + 1], level[i], level[i + 1]);
+	if (time[prevTSi] <= timeNow && timeNow < time[prevTSi + 1]) {
+		return interpolate(time[prevTSi], timeNow, time[prevTSi + 1], level[prevTSi], level[prevTSi + 1]);
+	}else {
+		for (int i = 0; i < time.size(); i++) {
+			if (time[i] <= timeNow && timeNow < time[i + 1]) {
+				prevTSi = i;
+				return interpolate(time[i], timeNow, time[i + 1], level[i], level[i + 1]);
+			}
 		}
 	}
 	cout << "Warning: Max value of timeSeries [" << source << "] returned.";

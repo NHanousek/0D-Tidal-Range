@@ -30,9 +30,10 @@ public:
 		const vector<double>& SluiceQ,
 		const vector<int>& Mode,
 		const double& EnergySum,
-		const double& Profit,
-		// const vector<int>& ancMode,
-		// const vector<double>& ancPrice);
+		const double& Profit
+	//	const vector<int>& ancMode,
+	//	const vector<double>& ancPrice
+	);
 };
 
 modelResults::modelResults(const string& RunResultsFileName, const vector<string> SchemeNames) {

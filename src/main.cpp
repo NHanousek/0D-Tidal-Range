@@ -7,8 +7,12 @@ using namespace std;
 
 int main(int argc, char *argv[]){
 
-    string cfgFileName;
+    ofstream test;
+    test.open("run.txt");
+    test.close();
 
+    string cfgFileName;
+    
     if (argc == 1) {
         cfgFileName = "BarraCUDA.dat";
     } else if (argc == 2){
@@ -22,7 +26,7 @@ int main(int argc, char *argv[]){
         cout << "Too many command line input arguments for this model build." << endl;
         return 1;
     }
-    cout << "BarraCUDA 2.16" << endl;
+    cout << "BarraCUDA 2.17" << endl;
     modelConfig cfg(cfgFileName);
 
 
