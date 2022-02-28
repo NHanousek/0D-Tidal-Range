@@ -16,6 +16,7 @@ double tidalRangeScheme::flex(double hs, double he, double hpe, const double& Si
   vector<double> flxTurbineQ = turbineQ;
   vector<double> flxHeadDiff = headDiff;
   vector<double> flxPowerOut = powerOut;
+  flxPrevSwitchTime = prevSwitchTime;
 
   while (flxT < SimTime + flexPeriod) {
     double flxRamp = trsRamp(flxT, flxPrevSwitchTime, rampTime);

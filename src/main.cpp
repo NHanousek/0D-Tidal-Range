@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include "zeroDModel.hpp"
-#include "genetics.hpp"
 
 using namespace std;
 
@@ -19,67 +18,25 @@ int main(int argc, char *argv[]){
         cfgFileName = argv[1];
         if (cfgFileName == "--help"){
             cout << "Perhaps try emailing Nick? [HanousekN@Cardiff.ac.uk]" << endl
-                 << "or enter your config file name: (default is BarraCUDA.dat)" << endl;
+                 << "or enter your config file name: (default is BarraCUDA.dat) (0 will end the program)" << endl;
             cin >> cfgFileName;
+            if (cfgFileName == "0") {
+                return 0;
+            }
         }
     } else {
         cout << "Too many command line input arguments for this model build." << endl;
         return 1;
     }
-    cout << "BarraCUDA 2.17" << endl;
+    cout << "BarraCUDA 2.18" << endl;
     modelConfig cfg(cfgFileName);
 
 
     if (cfg.isGenetic) {
-        /*
-        int nGens = 0;
-        // generate initial population
-        zeroDMPopulation parents(cfg);
-
-        // run initial population
-        parents.runPopulation();
-
-        // evaulate fitness
-        parents.evalFitness();
-
-        // record fitness
-        parents.writePopulationAndFitness(cfg);
-
-        // while no breakpoint
-        while (nGens <= cgf.maxGenerations()) {
-            nGens++;
-
-            // select best solutions
-            zeroDMPopulation children = parents.selection();
-
-            // crossover between parents
-            children.crossover();
-
-            // mutation of children
-            children.mutate();
-
-            // run children
-            children.run();
-
-            // children fitness
-            children.evalFitness();
-
-            // record children
-            children.writePopulationAndFitness();
-
-            // check endpoint criteria
-            if (children.meetBreakPoint(cfg,nGens)) {
-                break;
-            }
-            parents = children;
-            children.~zeroDMPopulation();
-        }
-        // record results
-        */
-        //system("pause");
+        
     }
     else {
-        cout << "Singleton Run Starting" << endl;
+        cout << "Gridded Run Starting" << endl;
         // the model is a singleton run
         zeroDModel model(cfg);
         model.run();
