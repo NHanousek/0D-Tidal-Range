@@ -18,6 +18,9 @@
 #include "Generals.hpp"
 #include "Ancillary.hpp"
 #include "genetics.hpp"
+// will need to figure out how to properly include the bayesopt library on my 
+// home laptop, because otherwise this won't work on there, and that would be sad.
+// #include "include\bayesopt\bayesopt.hpp"
 
 using namespace std;
 
@@ -529,22 +532,26 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 		std::cout << endl;
 		} else if (flexMethod == "BAYES") {
 			std::cout << "BAYESIAN OPTIMISATION METHOD NOT YET ADDED" << endl;
+			
+			// I really do despise other peoples code.
+			// If you're reading this you probably feel the same.
+			// bayesopt::BayesOptBase opt(3, params);
+			// opt.setBoundingBox(lBound, uBound);
+
+
+
+
 		} else if (flexMethod == "GENETIC") {
 			//std::cout << "GENETIC ALGORITHM OPTIMISATION METHOD NOT YET ADDED" << endl;
-			
-			// some of the other file has to go here... but not the definitions...
-			// genetics probably needs to be a header again.
-			// global variables, set to defaults.
-			
 			// Note: NVARS always == 3, otherwise it all probably falls apart.
-
-			int generation;
+			int generation; // iterators
 			int i;
 			int seed = 123456789; // could be setup to be a random number later on...
-			double optimum = 0.0;
+			double optimum = 0.0; 
 
 			std::cout << "Starting GA" << endl;
 
+			// define a population of tidal range setups
 			vector<genotype> population = initialize(
 				headDiffStartMax, headDiffStartMin,
 				headDiffEndMax, headDiffEndMin,
@@ -553,7 +560,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 
 			//vector<genotype> newpopulation = population;
 
-			// here we try to use a lambda again...
+			// here we try to use a lambda to run this snippet on demand.
 			auto eval = [&]() {
 				for (int member = 0; member < gaCfg.POPSIZE; member++) {
 					population[member].fitness = flex(
@@ -561,10 +568,13 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 						population[member].gene[1],
 						population[member].gene[2], SimTime);
 				}
-			};
-			eval(); 
-			keep_the_best(population, gaCfg);
+			}; // lambda can probably be very risky, but so far it seems to work...
 
+			// get fitness of the initial population
+			eval(); 
+			// classic genetic algorithm operation here really. Lots of ways to do it,
+			// but I just went with the one in the example I could find and get to work.
+			keep_the_best(population, gaCfg);
 			for (generation = 0; generation <= gaCfg.MAXGENS; generation++) {
 				crossover(population, seed, gaCfg);
 				mutate(population, seed, gaCfg);
@@ -575,9 +585,12 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				eval();
 				elitist(population, gaCfg);
 			}
+			// full_report prints the generation genes and fitness to a CSV file,
+			// helpfull in the debug but liable to create a mass of files if
+			// used in the long run.
+			// full_report(gaCfg.MAXGENS, population, gaCfg);
 
-			//full_report(gaCfg.MAXGENS, population, gaCfg);
-
+			// set the values to the optimums found in the GA process.
 			headDiffStart = population[gaCfg.POPSIZE].gene[0];
 			headDiffEnd = population[gaCfg.POPSIZE].gene[1];
 			pumpEnd = population[gaCfg.POPSIZE].gene[2];
@@ -585,12 +598,15 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 			
 			//cout << "HS: " << headDiffStart << ", HE: " << headDiffEnd << ", HP: " << pumpEnd << endl;
 
+			// save the flex info to the file, in the same way as the grid method does.
 			ofstream flexInfo; string flxName = schemeName + "_flx_Info.csv";
 			flexInfo.open(flxName, ofstream::app);
 			flexInfo << prevTime << ", " << headDiffStart << ", " << headDiffEnd << ", " << pumpEnd << ", " << optimum;
 
 		} else {
+			//should probably be an error throw here...
 			std::cout << "INVALID FLEX METHOD [" << flexMethod << "] USED" << endl;
+			flexMethod = "GRID";
 		}
 	}
 	// determine the mode of the model by working through the banks.
