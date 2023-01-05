@@ -298,6 +298,7 @@ double schemeArea::getLevelByVolume(const double &vol)
 	}
 };
 
+// new version of this function, old one was slower than Reza replying to an email.
 double schemeArea::newWaterLevel(const double &initialWaterLevel, const double &volumeChange)
 { // volume change, via trapezium rule
 	if (volumeChange == 0.0)
