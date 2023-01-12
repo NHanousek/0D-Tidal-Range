@@ -49,6 +49,8 @@ public:
 	vector<double> sluiceQ;			// flow rate through sluices (m3/s)
 	vector<int> mode;						// operating mode
 
+	// vector<int> ancMode;				// ancillary services mode
+	// vector<double> andPrice;		// ancillary services price/time
 };
 
 //------------------IMPLEMENTATIONS------------------//
@@ -94,7 +96,8 @@ void zeroDModel::run() {
 
 	while (simTime < maxTime) {
 		if (printFullResults) {
-				cout << " Time: " << simTime << " Hrs    Mode: " << mode[0] << endl;
+			printf("Time: %8.2f Mode: %d \n", simTime, mode[0]);
+			//	cout << " Time: " << simTime << " Hrs    Mode: " << mode[0] << endl;
 		}
 		simTime += timeStep;
 

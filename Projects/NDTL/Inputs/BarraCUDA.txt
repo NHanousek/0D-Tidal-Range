@@ -1,7 +1,0 @@
-Initial Config File For BarraCUDA
-Lagoon: Projects/NDTL/Inputs/LagoonNew.Dat
-Mesh:	Projects/NDTL/Inputs/Mesh-01.t3s
-ExternalWaterLevel: Projects/NDTL/Inputs/NDTL-Timeseries.ts1
-Turbines:	Projects/NDTL/Inputs/HQPTurbinesNew.dat
-Results:	Projects/NDTL/Outputs/NDTL-1x1_5m.csv
-End

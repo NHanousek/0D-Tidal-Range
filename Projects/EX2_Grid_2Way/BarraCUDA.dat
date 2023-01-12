@@ -1,0 +1,9 @@
+Auto Generated
+modelName: MTL-Flex-2W
+numSchemes: 1
+schemeFile: MTL-FL-2W.dat
+printFull: true
+energyValue: constant
+maxTime(hrs): 360
+timeStep(min): 3.5
+End

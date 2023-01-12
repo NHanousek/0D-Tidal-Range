@@ -6,6 +6,8 @@
 #define MODEL_CONFIG
 #include <string>
 #include <iostream>
+//#include "genetics.hpp"
+
 using namespace std;
 class modelConfig {
 private:
@@ -79,6 +81,8 @@ modelConfig::modelConfig(const string& fileName){
 
             } else if (tmp == "energyValue:"){
                 energyValueChange = true;
+                
+                
                 cfgFile >> energyValueFileName;
 
             } else if (tmp == "maxTime(hrs):") {

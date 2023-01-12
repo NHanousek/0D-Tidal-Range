@@ -1,0 +1,26 @@
+Mersey tidal lagoon based on Libaux et al
+schemeName: MTL-Libaux
+numBanks: 1
+operation: Ebb
+flexible: false
+inFlowFile: false
+energyValue: constant
+parrallellSluice: false
+schemeArea: Scheme_Area.out
+externalWaterLevel: MTL-Long-2018.ts1
+turbineFile: HQPTurbinesNew.dat
+areaSluices(m2): 2592
+numberTurbines(int): 28
+turbineDiameter(m): 8.0
+turbineCentreLevel(m): -999
+headDiffStart(m): 3.9
+headDiffEnd(m):	1.2
+waterLevelMax(m): 8.0
+waterLevelMin(m): -8.0
+sluiceCoefQ(0-1): 1
+turbineCoefQ(0-1): 1.0
+generatorEfficiency(%): 100
+turbineSafetyBuffer(m): 0.1
+switchModeBuffer(hrs): 0.125
+midTideLevel(mD): 0.0
+End

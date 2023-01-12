@@ -16,13 +16,18 @@
 #include "schemeArea.hpp"
 #include "timeSeries.hpp"
 #include "Generals.hpp"
+#include "Ancillary.hpp"
+#include "genetics.hpp"
+// will need to figure out how to properly include the bayesopt library on my 
+// home laptop, because otherwise this won't work on there, and that would be sad.
+// #include "include\bayesopt\bayesopt.hpp"
 
 using namespace std;
 
 inline void banksWarning(const bool& banksRead, const string& parameter) {
 	// this is probably where a proper error handling should be implemented.
 	// something that runs through the whole trs file and finds the numBanks keyword...
-	if (!banksRead) { cout << "!!!Warning!!! - <" << parameter << "> read before number of turbine banks declared." << endl; }
+	if (!banksRead) { std::cout << "!!!Warning!!! - <" << parameter << "> read before number of turbine banks declared." << endl; }
 };
 
 class tidalRangeScheme {
@@ -44,10 +49,12 @@ private:
 	bool isFlexible = false; // is this a flexibly operated lagoon? defaults to no.
 	bool isPumpFlexible = false; // is there flexing of the pumping start/stop
 	bool isEbbFloodPumpCurves = false; // are there unique curves for ebb and flood and pumping (n==4)
-	bool isParrallelSluice = false; // is there generation during sluicing?
+	bool isParallelSluice = false; // is there generation during sluicing?
 	string flexVariable = "profit"; // parameter that is maximised in flex mode
 	string flexType = "time"; // how do we decide when to switch
 	string pumpControl = "head"; // time -> Hours of pumping, head -> target head difference
+	string flexMethod = "GRID"; // How do we determine the start/end points during operation
+	string flexFileName = "Genetics.txt"; // the file that contains the algorithm control for the optimiser if not using grid.
 
 	// operational parameters
 	double prevTime = 0;	// time at last step, starts at zero, local time is always
@@ -75,17 +82,25 @@ private:
 	double pumpEff = 1.0;		// efficiency of turbine as pump
 	double midTide = 0.0;
 	// scheme area parameters
-  double minWaterLevel = 0; // min and max levels for the schemeArea calculation [mCD]
-  double maxWaterLevel = 0; // always 100 points between min and max.
+	double minWaterLevel = 0; // min and max levels for the schemeArea calculation [mCD]
+	double maxWaterLevel = 0; // always 100 points between min and max.
 
 	// physical parameters
 	double areaSluices = 0; // in m2 just use first bank externals for now...
-  double sluiceCd = 1; // discharge coefficient of sluices[0-1]
-  double turbineCd = 1; // discharge coefficient of turbines [0-1]
-  double generatorEfficiency = 1; // efficiency of generator [0-1]
-  double safetyBuffer = 0.1; // turbine safety buffer level [m]
-  double rampTime = 0.25; // ramping time [hours]
+	double sluiceCd = 1; // discharge coefficient of sluices[0-1]
+	double turbineCd = 1; // discharge coefficient of turbines [0-1]
+	double generatorEfficiency = 1; // efficiency of generator [0-1]
+	double safetyBuffer = 0.1; // turbine safety buffer level [m]
+	double rampTime = 0.25; // ramping time [hours]
 
+	// Ancillary services parameters
+	bool isAncillary = false; // is the scheme operating as an ancillary service device?
+	int ancMode = 0; // control mode of ancillary services operation
+	double ancPrice = 0.0; // Price generated over timestep by ancillary operation
+	ancType ancOp; // control parameters of the ancillary service operation
+
+	// ga c onfiguration
+	gaConfig gaCfg;
 public:
 
 	// active values for the whole scheme combined. vectors of length numBanks
@@ -142,9 +157,13 @@ public:
 		}
 		tq /= numBanks;
 		return tq;};
+	double flex(double hs, double he, double hpe, const double& SimTime);
 };
-//------------------IMPLEMENTATIONS------------------//
+//typedef double (tidalRangeScheme::*trsMemFn)(double hs, double he, double hpe, const double& SimTime);
+//trsMemFn FLX = &tidalRangeScheme::flex;
 
+//------------------IMPLEMENTATIONS------------------//
+#include "Flex.cpp"
 // this decision function is pretty damn granular and not as clean as
 // i would like... lots of scope to improve this
 // optional parameters hds and hde for when testing in flexible operation
@@ -157,8 +176,12 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 	// this is a lambda, it's like a mini function
 	// I think it is creating an issue with the ramp
 	auto upDatePrev = [&]() {
-		if (flex) { flxPrevSwitchTime = timeNow; }
-		else { prevSwitchTime = timeNow; }
+		if (flex) { 
+			flxPrevSwitchTime = timeNow; 
+		}
+		else { 
+			prevSwitchTime = timeNow; 
+		}
 	};
 	// if we are not in a flexible test, and are still in the buffer zone
 	if (!flex){
@@ -316,7 +339,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 						}
 						break;
 					default:
-						cout << "Tidal range scheme attempted invalid mode..." << endl;
+						std::cout << "Tidal range scheme attempted invalid mode..." << endl;
 						return 0;
 						break;
 				}
@@ -355,7 +378,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 						}
 						break;
 					default: // error has occured.
-						cout << "Tidal range scheme attempted invalid mode..." << endl;
+						std::cout << "Tidal range scheme attempted invalid mode..." << endl;
 						return 0;
 						break;
 				}
@@ -389,7 +412,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 						}
 						break;
 					default: // error has occured.
-						cout << "Tidal range scheme attempted invalid mode..." << endl;
+						std::cout << "Tidal range scheme attempted invalid mode..." << endl;
 						//system("pause");
 						return 0;
 						break;
@@ -397,7 +420,7 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 		}
 	}
 	//system("pause");
-	cout << "Tidal range scheme attempted invalid mode..." << endl;
+	std::cout << "Tidal range scheme attempted invalid mode..." << endl;
 	return 0;
 }
 
@@ -423,7 +446,10 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	volumeChange *= -1*(SimTime - prevTime)*60*60; // m^3 * seconds in time step
 
 	// and use that to determine new upstream level
-	double newUpStream = trsArea.newWaterLevel(upStream, volumeChange);
+	double newUpStream = upStream;
+	if (volumeChange >= 0.000001 || volumeChange <= -0.000001){ //don't calculate if yopu don't have to.
+		newUpStream = trsArea.newWaterLevel(upStream, volumeChange);
+	}
 	// this should stop oscillations...
 	if ((upStream > downStream[0] && newUpStream < externalWaterLevel[0].getLevel(SimTime))||(upStream < downStream[0] && newUpStream > externalWaterLevel[0].getLevel(SimTime))) {
 		upStream = externalWaterLevel[0].getLevel(SimTime);
@@ -432,7 +458,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	}
 
 	// from the upstream level we can determine the new area
-	wetArea = trsArea.getWettedArea(upStream);
+	wetArea = trsArea.getWettedArea(upStream, trsArea.prevWLi);
 
 	// at every timestep: determine if this is a decision timestep
 	// if it is, we run the next tidal cycle at different start/stop points,
@@ -440,214 +466,35 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	// and find the best one(s), then set headDiffStart and headDiffEnd based
 	// on that to be used for every timestep until the next change point...
 	if (isFlexible && isSwitchPoint(prevTime, SimTime)) {
-			cout << " Flexing at " << schemeName;
-			// vectors for storing the start and end heads when finding best solution
+		std::cout << " Flexing at " << schemeName;
+		// vectors for storing the start and end heads when finding best solution
+		if (flexMethod == "GRID") {
 			vector<double> flxHs; // start
 			vector<double> flxHe; // end
 			vector<double> flxHpe; // pump end
 			vector<double> flxProf; // profit
-
-			//ofstream tmp_f;
-			//string tmp_fname = "flx_" + to_string(he) + "_" + to_string(hs) + "_tmp.csv";
-			//string tmp_fname = "flx_"+to_string(SimTime)+"_tmp.csv";
-			//tmp_f.open(tmp_fname);
-			//tmp_f << "Time[Hrs],US[mCD],US[mCD],power[MW],turbQ[m3/s],SlQ[m3/s],Mode[-],flxProd[-],flxdV[m3]" << endl;
-			//tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
-			// starting head
 			double hs = headDiffStartMin;
-			//double prevHs = headDiffStart; double prevHe = headDiffEnd;
-
 			while (hs <= headDiffStartMax) {
-
 				// finishing head
 				double he = headDiffEndMin;
-
 				while (he <= minimum(headDiffEndMax,(hs - headDiffEndDelta))){
-
 					double hpe;
-
-					if (!isPumpFlexible) {
-						hpe = pumpEndMax;
-					} else {
-						hpe = pumpEndMin;
-					}
+					if (!isPumpFlexible) { hpe = pumpEndMax; }
+					else { hpe = pumpEndMin; }
 					while (hpe <= pumpEndMax) {
-
-						// copy lagoon state to local variables
-						double flxT = SimTime;
-						flxPrevSwitchTime = prevSwitchTime;
-
-						// double flxWetArea = wetArea; not needed here
-						double flxUpstream = upStream;
-						double flxSluiceQ = sluiceQ;
-						double flxInflow = inFlowRate;
-						int flxMode = mode;
-						double flxProduct = 0; // the variable to be maximised
-						double flxMax = flxUpstream;
-						double flxMin = flxUpstream; // min and max hold params for range based analysis
-						vector<double> flxDownStream = downStream;
-						vector<double> flxTurbineQ = turbineQ;
-						vector<double> flxHeadDiff = headDiff;
-						vector<double> flxPowerOut = powerOut;
-
-
-						// at every coarse timestep in test period
-						while (flxT < SimTime + flexPeriod) {
-
-							double flxRamp = trsRamp(flxT, flxPrevSwitchTime, rampTime);
-
-							double flxVolumeChange = flxSluiceQ + flxInflow;
-							for (int i = 0; i < numBanks; i++) {
-								flxVolumeChange += flxTurbineQ[i];
-							}
-							flxVolumeChange *= -1 * (flexDt * 60 * 60);
-							double flxNewUpstream = trsArea.newWaterLevel(flxUpstream, flxVolumeChange);
-
-							if ((flxUpstream > flxDownStream[0] && flxNewUpstream < externalWaterLevel[0].getLevel(flxT)) ||
-								(flxUpstream < flxDownStream[0] && flxNewUpstream > externalWaterLevel[0].getLevel(flxT))) {
-								flxUpstream = externalWaterLevel[0].getLevel(flxT);
-							}
-							else {
-								flxUpstream = flxNewUpstream;
-							}
-
-							// run the model as if it were fixed head.
-							bool flxSafetyHold = false;
-							bool flxDryUpstream = false;
-							for (int i = 0; i < numBanks; i++) {
-								flxDownStream[i] = externalWaterLevel[i].getLevel(flxT);
-								flxHeadDiff[i] = flxUpstream - flxDownStream[i];
-
-								// do any of the banks trip the safety warning?
-								if (flxUpstream <= turbines[i].safeLevel(safetyBuffer) || flxDownStream[i] <= turbines[i].safeLevel(safetyBuffer)) {
-									flxSafetyHold = true;
-								}
-							}
-							if (flxUpstream <= trsArea.minInternalLevel + safetyBuffer) {
-								flxDryUpstream = true;
-							}
-							// this is where it gets tricky/interesting.
-							// crude initial guess based on first set of banks
-							// 'true' tells the nextmode function that we're in flex operation
-							// so that it shouldn't disturb the real prevSwitchMode
-							flxMode = nextMode(flxHeadDiff[0], flxT, hs, he, hpe, flxMode, true);
-
-							if (flxSafetyHold == true) {
-								if (flxMode != 2) {
-									flxPrevSwitchTime = flxT;
-								}
-								flxMode = 2;
-							}
-
-							for (int i = 0; i < numBanks; i++) {
-								switch (flxMode) {
-								case 1: // Filling/sluicing
-									if (isParrallelSluice) {
-										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										//flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-									} else {
-										flxPowerOut[i] = 0;
-										flxTurbineQ[i] = turbines[i].orifice(flxHeadDiff[i]) * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										//flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-									}
-									if (flxDryUpstream) {
-										if (flxTurbineQ[i] > 0) {
-											flxTurbineQ[i] = 0;
-											//flxSluiceQ = 0;
-											flxPowerOut[i] = 0;
-										}
-									}
-									break;
-								case 2: // Holding
-									flxPowerOut[i] = 0;
-									flxTurbineQ[i] = 0;
-									//flxSluiceQ = 0;
-									break;
-								case 3: // Generating
-									flxSluiceQ = 0;
-									if (flxDryUpstream) {
-										if (flxTurbineQ[i] > 0) {
-											flxTurbineQ[i] = 0;
-											flxPowerOut[i] = 0;
-											flxMode = 2; flxPrevSwitchTime = flxT;
-										}
-									}
-									else {
-										flxPowerOut[i] = turbines[i].getPower(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-									}
-									break;
-								case 4: // Pumping
-									flxSluiceQ = 0;
-									if (flxDryUpstream) {
-										flxMode = 2; flxPrevSwitchTime = flxT;
-										flxPowerOut[i] = 0;
-										flxTurbineQ[i] = 0;
-									}
-									else {
-										flxPowerOut[i] = -1 * turbines[i].getPower(flxHeadDiff[i]) * flxRamp * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i));
-										flxTurbineQ[i] = absolute(turbines[i].getFlow(flxHeadDiff[i]) * flxRamp * pumpEff * kronecker(i, getCurveNumber(flxHeadDiff[i], flxMode, i))*pumpEff);
-										if (flxUpstream >= midTide) {
-											flxTurbineQ[i] *= -1.0;
-										}
-									}
-									break;
-								}
-								if (flxMode == 1) {
-									flxSluiceQ = orificeFlow(sluiceCd, flxHeadDiff[0], areaSluices) * flxRamp;
-								}
-								else {
-									flxSluiceQ = 0.0;
-								}
-								// here it optimises based on the desired parameter
-								// if you want to add more, you can copy/use the methods from
-								// the existing two, and add them to the if-else tree.
-								if (flexVariable == "profit" || flexVariable == "Profit") {
-									flxProduct += flxPowerOut[i] * energyValue.getLevel(flxT) * flexDt;
-								}
-								else if (flexVariable == "energy" || flexVariable == "Energy") {
-									flxProduct += flxPowerOut[i] * flexDt;
-								}
-								else if (flexVariable == "intertidal" || flexVariable == "Intertidal") {
-									if (flxUpstream < flxMin) {
-										flxMin = flxUpstream;
-									}
-									else if (flxUpstream > flxMax) {
-										flxMax = flxUpstream;
-									}
-									// it might be faster to put this elsewhere, but it keeps things
-									// nice and compact.
-									flxProduct = flxMax - flxMin;
-								}
-							}
-              //tmp_f <<  flxT<<","<<flxUpstream<<","<<flxDownStream[0]<<","<<flxPowerOut[0]<<","<<flxTurbineQ[0]<<","<<flxSluiceQ<<","<<flxMode<<","<<flxProduct << "," << flxVolumeChange << endl;
-							flxInflow = inFlow.getLevel(flxT);
-							flxT += flexDt;
-						}
-						cout << "+";
 						// save the values found in this sample
 						flxHs.push_back(hs);
 						flxHe.push_back(he);
 						flxHpe.push_back(hpe);
-
-						flxProf.push_back(flxProduct);
-                        //tmp_f.close();
-						//tmp_f << "flxHS[m],flxHE[m],flxHP[m],flxPR[£]" << endl;
-					//tmp_f << hs << "," << he << "," << hpe << "," << flxProduct << endl;
-						// test the next pump end level
+						flxProf.push_back(flex(hs,he,hpe,SimTime));
 						hpe += pumpEndDelta;
-
 					}
 					// test next head diff end
 					he += headDiffEndDelta;
-
 				}
 				// test the next head diff start
 				hs += headDiffStartDelta;
-
 			}
-			//tmp_f.close();
 			// set start and end point for the main model based on the optimal
 			// values found int the flex test period
 			double tmp_maxV = maxVal(flxProf);
@@ -661,16 +508,106 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 				headDiffEnd = flxHe[mxv];
 				pumpEnd = flxHpe[mxv];
 			}
+			/*
+			ofstream flxTmp;
+			flxTmp.open(to_string(SimTime) + "_GRID.csv");
+			flxTmp << "I,HSTART,HEND,HPUMP,FITNESS" << endl;
+			for (int i = 0; i < flxProf.size(); i++) {
+				flxTmp << i << ","
+					<< flxHs[i] << ","
+					<< flxHe[i] << ","
+					<< flxHpe[i] << ","
+					<< flxProf[i] << endl;
+			}
+			flxTmp.close();*/
 
+		ofstream flexInfo; string flxName = schemeName + "_flx_Info.csv";
+		flexInfo.open(flxName,ofstream::app);
+		flexInfo << prevTime << ", "<< headDiffStart<< ", "<< headDiffEnd << ", " << pumpEnd << ", " << maxVal(flxProf);
+		//for (int i = 0; i < flxProf.size(); i++) {
+		//	flexInfo << ", " << flxProf[i];
+		//}
+		flexInfo << endl;
+		flexInfo.close();
+		std::cout << endl;
+		} else if (flexMethod == "BAYES") {
+			std::cout << "BAYESIAN OPTIMISATION METHOD NOT YET ADDED" << endl;
+			
+			// I really do despise other peoples code.
+			// If you're reading this you probably feel the same.
+			// bayesopt::BayesOptBase opt(3, params);
+			// opt.setBoundingBox(lBound, uBound);
+
+
+
+
+		} else if (flexMethod == "GENETIC") {
+			//std::cout << "GENETIC ALGORITHM OPTIMISATION METHOD NOT YET ADDED" << endl;
+			// Note: NVARS always == 3, otherwise it all probably falls apart.
+			int generation; // iterators
+			int i;
+			int seed = 123456789; // could be setup to be a random number later on...
+			double optimum = 0.0; 
+
+			std::cout << "Starting GA" << endl;
+
+			// define a population of tidal range setups
+			vector<genotype> population = initialize(
+				headDiffStartMax, headDiffStartMin,
+				headDiffEndMax, headDiffEndMin,
+				pumpEndMax, pumpEndMin,
+				seed, gaCfg);
+
+			//vector<genotype> newpopulation = population;
+
+			// here we try to use a lambda to run this snippet on demand.
+			auto eval = [&]() {
+				for (int member = 0; member < gaCfg.POPSIZE; member++) {
+					population[member].fitness = flex(
+						population[member].gene[0],
+						population[member].gene[1],
+						population[member].gene[2], SimTime);
+				}
+			}; // lambda can probably be very risky, but so far it seems to work...
+
+			// get fitness of the initial population
+			eval(); 
+			// classic genetic algorithm operation here really. Lots of ways to do it,
+			// but I just went with the one in the example I could find and get to work.
+			keep_the_best(population, gaCfg);
+			for (generation = 0; generation <= gaCfg.MAXGENS; generation++) {
+				crossover(population, seed, gaCfg);
+				mutate(population, seed, gaCfg);
+				if (generation % 10 == 0) {
+					report(generation, population, gaCfg);
+					//full_report(generation, SimTime, population, gaCfg);
+				}
+				eval();
+				elitist(population, gaCfg);
+			}
+			// full_report prints the generation genes and fitness to a CSV file,
+			// helpfull in the debug but liable to create a mass of files if
+			// used in the long run.
+			// full_report(gaCfg.MAXGENS, population, gaCfg);
+
+			// set the values to the optimums found in the GA process.
+			headDiffStart = population[gaCfg.POPSIZE].gene[0];
+			headDiffEnd = population[gaCfg.POPSIZE].gene[1];
+			pumpEnd = population[gaCfg.POPSIZE].gene[2];
+			optimum = population[gaCfg.POPSIZE].fitness;
+			
+			//cout << "HS: " << headDiffStart << ", HE: " << headDiffEnd << ", HP: " << pumpEnd << endl;
+
+			// save the flex info to the file, in the same way as the grid method does.
 			ofstream flexInfo; string flxName = schemeName + "_flx_Info.csv";
-			flexInfo.open(flxName,ofstream::app);
-			flexInfo << prevTime << ", "<< headDiffStart<< ", "<< headDiffEnd << ", " << pumpEnd << ", " << maxVal(flxProf);
-			//for (int i = 0; i < flxProf.size(); i++) {
-			//	flexInfo << ", " << flxProf[i];
-			//}
-			flexInfo << endl;
-			flexInfo.close();
-			cout << endl;
+			flexInfo.open(flxName, ofstream::app);
+			flexInfo << prevTime << ", " << headDiffStart << ", " << headDiffEnd << ", " << pumpEnd << ", " << optimum;
+
+		} else {
+			//should probably be an error throw here...
+			std::cout << "INVALID FLEX METHOD [" << flexMethod << "] USED" << endl;
+			flexMethod = "GRID";
+		}
 	}
 	// determine the mode of the model by working through the banks.
 	// Need to implement some kind of heirarchy, here...
@@ -711,7 +648,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 	for (int i = 0; i < numBanks; i++ ) {
 		switch (mode) {
 			case 1: // Filling/sluicing
-				if (isParrallelSluice) {
+				if (isParallelSluice) {
 					powerOut[i] = turbines[i].getPower(headDiff[i]) * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 					turbineQ[i] = turbines[i].getFlow(headDiff[i]) * kronecker(i, getCurveNumber(headDiff[i], mode, i));
 				} else {
@@ -818,16 +755,16 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				} else if (tmp == "Two-Way"||tmp == "two-way"||tmp == "2wy"||tmp == "2Way"||tmp == "2way"||tmp == "2"|| tmp == "2WY"){
 					operation = 2;
 				} else {
-					cout << "Invalid operation mode [" << tmp <<  "] entered in: " << fileName << endl;
+					std::cout << "Invalid operation mode [" << tmp <<  "] entered in: " << fileName << endl;
 					//bcError(string("Invalid operation mode [" + tmp + "] entered in: " + fileName));
 					//system("pause");
 				}
 			} else if (tmp == "pumping:") {
 				inFile >> tmp;
 				isPumping = boolStr(tmp);
-			} else if (tmp == "parrallelSluice:" || tmp == "parrallelSluicing:") {
+			} else if (tmp == "parrallelSluice:" || tmp == "parallelSluice:" || tmp == "parrallelSluicing:" || tmp == "parallelSluicing:") {
 				inFile >> tmp;
-				isParrallelSluice = boolStr(tmp);
+				isParallelSluice = boolStr(tmp);
 			} else if (tmp == "flexible:") {
 				inFile >> tmp;
 				isFlexible = boolStr(tmp);
@@ -972,9 +909,21 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 				string tmpS;
 				inFile >> tmpS;
 				isEbbFloodPumpCurves = boolStr(tmpS);
-				cout << "PLEASE REMEMBER THAT YOU MUST SUPPLY BOTH EBB AND FLOOD/PUMP AND GENERATION CURVE FILES" << endl;
+				std::cout << "PLEASE REMEMBER THAT YOU MUST SUPPLY BOTH EBB AND FLOOD/PUMP AND GENERATION CURVE FILES" << endl;
+			} else if (tmp == "ancillaryServices:" || tmp == "AncillaryServices:") {
+				string tmpS;
+				inFile >> tmpS;
+				isAncillary = boolStr(tmpS);
+			} else if (tmp == "ancillaryFile:" || tmp == "AncillaryFile:") {
+				inFile >> tmp;
+				ancOp = ancType(tmp);
+			} else if (tmp == "FLEXMETHOD:" || tmp == "flexmethod:" || tmp == "FlexMethod:" || tmp == "flexMethod:") {
+				inFile >> flexMethod;
+			} else if (tmp == "FLEXFILE:" || tmp == "flexfile:" || tmp == "FlexFile:" || tmp == "flexFile:") {
+				inFile >> flexFileName;	
 			}else {
-				cout << "Invalid parameter <" << tmp << "> in [" << fileName << "] ..."<< endl;
+				std::cout << "Invalid parameter <" << tmp << "> in [" << fileName << "] ..."<< endl;
+				inFile >> tmp;
 				//bcError(string("Invalid parameter <" + tmp + "> in [" + fileName + "] ..."));
 				//system("pause");
 			}
@@ -991,12 +940,12 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 		}
 		trsArea = schemeArea(schmFile, minWaterLevel, maxWaterLevel);
 	}else {
-		cout << "Unable to open [" << fileName << "]..." << endl;
+		std::cout << "Unable to open [" << fileName << "]..." << endl;
 		//system("pause");
 	}
 	if (isEbbFloodPumpCurves) {
 		if (numBanks != 4) {
-			cout << "WARNING: <" << numBanks << "> should be 4 for Ebb/Flood Generating/Pumping curve combos." << endl;
+			std::cout << "WARNING: <" << numBanks << "> should be 4 for Ebb/Flood Generating/Pumping curve combos." << endl;
 			bcError(string("WARNING: <" + to_string(numBanks) + "> should be 4 for Ebb/Flood Generating/Pumping curve combos."));
 		}
 	}
@@ -1067,11 +1016,14 @@ tidalRangeScheme::tidalRangeScheme(const string& fileName) {
 					}
 				}
 			} else {
-				cout << "Invalid flex type entered." << endl;
+				std::cout << "Invalid flex type entered." << endl;
 				//return 0;
 
 			}
 		}
+	}
+	if (flexMethod == "GENETIC") {
+		startupGA(flexFileName, gaCfg);
 	}
 };
 

@@ -1,0 +1,7 @@
+Genetic Algorithm Control File
+POPSIZE: 125
+MAXGENS: 100
+NVARS: 3
+PXOVER: 0.5
+PMUTATION: 0.35
+End

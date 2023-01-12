@@ -1,0 +1,39 @@
+West Somerset Lagoon BayesOpt
+schemeName: MTL-FL-2W
+numBanks: 1
+operation: 2Way
+flexible: true
+flexPumping: true
+pumping: true
+pumpControl: head
+pumpEfficiency(0-1): 0.75
+inFlowFile: false
+energyValue: SSP-2018.dat 
+parrallellSluice: false
+schemeArea: Scheme_Area.out
+externalWaterLevel: MTL-Long-2018.ts1
+turbineFile: HQPTurbinesNew.dat
+areaSluices(m2): 60480.0
+numberTurbines(int): 50
+turbineDiameter(m): 8.0
+turbineCentreLevel(m): -999
+headDiffStart(m): 7.5 2.5
+headDiffEnd(m):	3.5 1
+pumpEndMax: 3.5
+pumpEndMin: 1.25
+pumpEndDelta: 0.1
+headDiffStartDelta(m): 0.1
+headDiffEndDelta(m): 0.1
+flexPeriod(hrs): 6.5
+flexDt(hrs): 0.125
+flexType: HighLow
+waterLevelMax(m): 8.0
+waterLevelMin(m): -8.0
+sluiceCoefQ(0-1): 1
+turbineCoefQ(0-1): 1.0
+generatorEfficiency(%): 100
+turbineSafetyBuffer(m): 0.1
+switchModeBuffer(hrs): 0.125
+midTideLevel(mD): 0.0
+flexMethod: GENETIC
+End
