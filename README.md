@@ -1,4 +1,4 @@
-# BarraCUDA
+# 0D-Tidal-Range (formerly BarraCUDA)
 
 ## 0D Modelling of tidal range schemes.
 
@@ -11,6 +11,8 @@ The easiest way to compile the model on Mac/Linux, available on Windows as well 
 
 ### To Do:
 	- Improve documentation...
+	- Better example models.
+	- Develop ancillary services operation.
 
 ### Origins
 Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project.
@@ -18,7 +20,6 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
 ### Notes:
   1. This model is mainly a learning project for me, testing the varius bits aong the way. 
   2. Try to use the word 'scheme' not 'Barrage' or 'Lagoon'
-
 ## Structure:
 ![0D model structure](https://github.com/NHanousek/0D-Tidal-Range/blob/AncillaryServices/Figures/0D-Model-Structure.png?raw=true)
 
@@ -36,55 +37,3 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   5. use longNamesForThings to make it easier to determine what is being used.
   6. No user input after startup.
   7. Function first, performance next.
-
-## Approximate flow of model
-1. Declarations and definitions
-2. read a config file that pulls all the individual filenames together
-
-    i. Initialise lagoon
-
-    ii. Initialise mesh or area
-
-    iii. Initialise turbines
-
-    iv. Initialise external water level
-
-3. check input parameters for bad inputs
-4. initialise results parameters
-5. Initialise modeling
-6. if (generation == ebb only) 
-  - mode will progress: hold -> fill -> hold -> generate -> hold -> fill
-
-
-7. if (generation == two way)
-  - mode will progress: fill -> hold -> generate -> sluice -> hold -> generate -> fill
-
-
-8. Different modes will affect the behaviour differently:
-
-   i. Holding:
-   - turbineFlow = sluiceFlow = 0
-   - internal water level = constant (unless seperate inflow)
-
-   ii. Filling:
-   - turbine flow = 0
-   - external water level > internal water level
-   - lagoon is filling up
-   - tide is in flood movement
-
-   iii. Generating
-   - turbine flow > 0
-   - head difference between levels is within desired range
-   - water level in lagoon is changing depending on the ebb/flood state
-
-   iv. Sluicing
-   - turbine flow = 0
-   - lagoon is emptying
-   - tide is in ebb movement
-9. Calculation of parameters/results at each step:
-  - headDifference = lagoonWaterLevel - externalWaterLevel
-  - flowTurbines = function of (headDifference) - turbine function
-  - flowSluices = function of (headDifference) - sluices function
-  - wettedArea = function of bathymettry/mesh - mesh function
-  - lagoonWaterLevel(i+1) = lagoonWaterLevel(i) + (flowTurbines + flowSluices + externalFlows)dt/wettedArea
-    - if wetted area drops to zero (the lagoon dries out) the lagoon water level stays at 0 until the tide begins to rise again
