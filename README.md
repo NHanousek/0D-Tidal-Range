@@ -21,7 +21,7 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
   1. This model is mainly a learning project for me, testing the varius bits aong the way. 
   2. Try to use the word 'scheme' not 'Barrage' or 'Lagoon'
 ## Structure:
-![0D model structure](https://github.com/NHanousek/0D-Tidal-Range/blob/AncillaryServices/Figures/0D-Model-Structure.png?raw=true)
+![0D model structure](https://github.com/NHanousek/0D-Tidal-Range/blob/Tree/master/Figures/0D-Model-Structure.png?raw=true)
 
 ## Principles:
   1. Flow from upstream to downstream is positive.
