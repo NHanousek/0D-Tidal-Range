@@ -1,0 +1,9 @@
+Auto Generated
+modelName: MTL-Fixed-Ebb
+numSchemes: 1
+schemeFile: MTL-FX-EB.dat
+printFull: true
+energyValue: constant
+maxTime(hrs): 360
+timeStep(min): 3.5
+End

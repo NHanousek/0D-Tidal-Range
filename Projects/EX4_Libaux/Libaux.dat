@@ -1,0 +1,9 @@
+Example that runs the Libaux Mersey Model.
+modelName: MTL-Libaux
+numSchemes: 1
+schemeFile: MTL-Libaux.dat
+printFull: true
+energyValue: SSP-2018.dat
+maxTime(hrs): 8760
+timeStep(min): 5
+End
