@@ -1,7 +1,7 @@
 # run all three schemes for a variety of conditions
 # The big bad script that runs many many models
 using CSV, DataFrames, Dates, BayesOpt
-cd("/Users/nicolashanousek/Documents/0D/AncilliaryServices/model.nosync/")
+
 function is_in(vect, val)
     for vec in vect
         if vec == val
