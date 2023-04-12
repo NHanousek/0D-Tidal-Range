@@ -35,6 +35,6 @@ Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran
                 const string& fileName; // when called in the function input
                 fileName= Lagoon.txt;   // when declared in the main program.
 
-  5. use longNamesForThings to make it easier to determine what is being used.
+  5. use camelCase to make it easier to determine what is being used.
   6. No user input after startup.
   7. Function first, performance next.
