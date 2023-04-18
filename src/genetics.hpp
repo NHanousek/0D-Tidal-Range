@@ -12,6 +12,10 @@
 // # include <ctime>
 # include <string>
 
+#include <vector>
+#include <algorithm>
+#include <random>
+
 using namespace std;
 
 struct gaConfig {
@@ -44,11 +48,14 @@ void elitist(vector<genotype>& population, gaConfig cfg);
 void crossover(vector<genotype>& population, int& seed, gaConfig cfg);
 void startupGA(const string& fileName, gaConfig& cfg);
 void full_report(int generation, double simtime, vector<genotype> population, gaConfig cfg);
-// startup
-void startupGA(const string& fileName, 
-    gaConfig& cfg) {
-    
-        //first = false;
+vector<double> map_point(vector<double> point, vector<double> min, vector<double> max);
+vector<vector<double>> generate_latin_hypercube(int n, int dimensions);
+
+    // startup
+    void startupGA(const string &fileName, gaConfig &cfg)
+{
+
+    // first = false;
     ifstream inFile(fileName);
     string tmp = "NaN";
     if (inFile.is_open()) {
@@ -383,36 +390,51 @@ vector<genotype> initialize(
     int i;
     ifstream input;
     int j;
-    double lbound[3] = { hsMin, heMin, hpMin };
-    double ubound[3] = { hsMax, heMax, hpMax };
+    vector<double> lbound{ hsMin, heMin, hpMin };
+    vector<double> ubound{ hsMax, heMax, hpMax };
     vector<genotype> population(cfg.POPSIZE + 1);
 
-    //   input.open(filename.c_str());
-    //   if (!input)
-    //   {
-    //     cerr << "\n";
-    //     cerr << "INITIALIZE - Fatal error!\n";
-    //     cerr << "  Cannot open the input file!\n";
-    //     exit ( 1 );
-    //   }
-    // 
-    //  Initialize variables within the bounds 
-    //
-    for (i = 0; i < cfg.NVARS; i++)
-    {
-    //    input >> lbound >> ubound;
+    vector<vector<double>> hypercube = generate_latin_hypercube(cfg.POPSIZE, cfg.NVARS);
 
-        for (j = 0; j < cfg.POPSIZE; j++)
-        {
-            population[j].fitness = 0;
-            population[j].rfitness = 0;
-            population[j].cfitness = 0;
+    for (j = 0; j < cfg.POPSIZE; j++) {
+        population[j].fitness = 0;
+        population[j].rfitness = 0;
+        population[j].cfitness = 0;
+
+        for (i = 0; i < cfg.NVARS; i++) {
             population[j].lower[i] = lbound[i];
             population[j].upper[i] = ubound[i];
-            population[j].gene[i] = r8_uniform_ab(lbound[i], ubound[i], seed);
+
+            population[j].gene = map_point(hypercube[i], lbound, ubound);
         }
     }
-    input.close();
+
+        // //   input.open(filename.c_str());
+        // //   if (!input)
+        // //   {
+        // //     cerr << "\n";
+        // //     cerr << "INITIALIZE - Fatal error!\n";
+        // //     cerr << "  Cannot open the input file!\n";
+        // //     exit ( 1 );
+        // //   }
+        // //
+        // //  Initialize variables within the bounds
+        // //
+        // for (i = 0; i < cfg.NVARS; i++)
+        // {
+        // //    input >> lbound >> ubound;
+
+        //     for (j = 0; j < cfg.POPSIZE; j++)
+        //     {
+        //         population[j].fitness = 0;
+        //         population[j].rfitness = 0;
+        //         population[j].cfitness = 0;
+        //         population[j].lower[i] = lbound[i];
+        //         population[j].upper[i] = ubound[i];
+        //         population[j].gene[i] = r8_uniform_ab(lbound[i], ubound[i], seed);
+        //     }
+        // }
+        input.close();
     return population;
 }
 //****************************************************************************80
@@ -782,6 +804,57 @@ void Xover(vector<genotype>& population, int one, int two, int& seed, gaConfig c
     }
     return;
 }
+
+// Function to generate a random N-dimensional Latin hypercube
+vector<vector<double>> generate_latin_hypercube(int n, int dimensions)
+{
+    // Initialize the vector of vectors
+    vector<vector<double>> hypercube(n, vector<double>(dimensions));
+
+    // Create vectors with the index of each row and column
+    vector<int> row_indices(n);
+    vector<vector<int>> col_indices(dimensions, vector<int>(n));
+    for (int i = 0; i < n; i++)
+    {
+        row_indices[i] = i;
+        for (int j = 0; j < dimensions; j++)
+        {
+            col_indices[j][i] = j * n + i;
+        }
+    }
+
+    // Shuffle the row and column indices for each dimension
+    random_device rd;
+    mt19937 gen(rd());
+    for (int j = 0; j < dimensions; j++)
+    {
+        shuffle(col_indices[j].begin(), col_indices[j].end(), gen);
+    }
+
+    // Fill in the hypercube with the shuffled values
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < dimensions; j++)
+        {
+            hypercube[i][j] = (col_indices[j][i] + 0.5) / (n * dimensions);
+        }
+    }
+
+    return hypercube;
+}
+
+// Function to map a point from a unit hypercube to a specified range in each dimension
+vector<double> map_point(vector<double> point, vector<double> min, vector<double> max)
+{
+    int dimensions = point.size();
+    vector<double> mapped_point(dimensions);
+    for (int j = 0; j < dimensions; j++)
+    {
+        mapped_point[j] = min[j] + point[j] * (max[j] - min[j]);
+    }
+    return mapped_point;
+}
+
 //****************************************************************************
 /*double ga_optimise(
     double& hs, double& he, 
