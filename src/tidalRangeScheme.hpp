@@ -601,7 +601,7 @@ void tidalRangeScheme::updateTo(const double& SimTime) {
 			// save the flex info to the file, in the same way as the grid method does.
 			ofstream flexInfo; string flxName = schemeName + "_flx_Info.csv";
 			flexInfo.open(flxName, ofstream::app);
-			flexInfo << prevTime << ", " << headDiffStart << ", " << headDiffEnd << ", " << pumpEnd << ", " << optimum;
+			flexInfo << prevTime << ", " << headDiffStart << ", " << headDiffEnd << ", " << pumpEnd << ", " << optimum << endl;
 
 		} else {
 			//should probably be an error throw here...
