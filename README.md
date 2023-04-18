@@ -14,7 +14,7 @@ The easiest way to compile the model on Mac/Linux, available on Windows as well 
 	- Better example models.
 
 ### Origins
-Based off Jingjings rebuild of Reza's 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project - with maximum flexibility for the user.
+Based off [Jingjings](https://www.researchgate.net/profile/Jingjing-Xue-4) rebuild of [Reza's](https://www.researchgate.net/profile/Reza-Ahmadian-2) 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project - with maximum flexibility for the user.
 
 ### Notes:
   1. This model is mainly a learning project for me, testing the varius bits aong the way. 
