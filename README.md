@@ -17,9 +17,8 @@ The easiest way to compile the model on Mac/Linux, available on Windows as well 
 Based off [Jingjings](https://www.researchgate.net/profile/Jingjing-Xue-4) rebuild of [Reza's](https://www.researchgate.net/profile/Reza-Ahmadian-2) 0D model, but in C++ as opposed to Fortran with the aim of making a modern built and stored project - with maximum flexibility for the user.
 
 ### Notes:
-  1. This model is mainly a learning project for me, testing the varius bits aong the way. 
-  2. Try to use the word 'scheme' not 'Barrage' or 'Lagoon'
-  3. This model was formerly known as BarraCUDA but use of CUDA in the model never occured and it felt like a bit of a silly name.
+  1. Use the word 'scheme' not 'Barrage' or 'Lagoon'
+  2. This model was formerly known as BarraCUDA but use of CUDA in the model never occured so it got a more generic name.
 
 ## Structure:
 ![0D model structure](https://github.com/NHanousek/0D-Tidal-Range/blob/master/Figures/0D-Model-Structure.png?raw=true)
@@ -35,6 +34,5 @@ Based off [Jingjings](https://www.researchgate.net/profile/Jingjing-Xue-4) rebui
                 const string& fileName; // when called in the function input
                 fileName= Lagoon.txt;   // when declared in the main program.
 
-  5. use camelCase to make it easier to determine what is being used.
+  5. Use camelCase for variables and functions
   6. No user input after startup.
-  7. Function first, performance next.
