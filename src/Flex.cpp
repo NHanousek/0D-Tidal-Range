@@ -28,7 +28,7 @@ double tidalRangeScheme::flex(double hs, double he, double hpe, const double& Si
     flxVolumeChange *= -1 * (flexDt * 60 * 60);
     double flxNewUpstream = flxUpstream;
     if (flxVolumeChange >= 0.000001 || flxVolumeChange <= -0.000001) {
-        trsArea.newWaterLevel(flxUpstream, flxVolumeChange);
+      flxUpstream = trsArea.newWaterLevel(flxUpstream, flxVolumeChange);
     }
 
     if ((flxUpstream > flxDownStream[0] && flxNewUpstream < externalWaterLevel[0].getLevel(flxT)) ||
