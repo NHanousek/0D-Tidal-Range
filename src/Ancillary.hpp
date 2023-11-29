@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "Generals.hpp"
 /*
 How does a TRS operating in ancillary services work?
 So it depends on the AC type, because they all work differently...
@@ -48,35 +49,37 @@ ancType::ancType(const string& fileName) {
     ifstream inFile;
     inFile.open(fileName);
     if (inFile.is_open()) {
-        string tmp = "NaN";
-        while (tmp != "End") {
-            inFile >> tmp; // header line
-            if (tmp == "End" || tmp == "end" || tmp == "END") {
+        string raw = "NaN";
+        string tmp = "NAN";
+        while (tmp != "END") {
+            inFile >> raw; // header line
+            tmp = toUpperCase(raw);
+            if (tmp == "END") {
                 break;
             }
-            else if (tmp == "tenderDuration(hrs):") {
+            else if (tmp == "TENDERDURATION(HRS):") {
                 inFile >> tenderDuration;
             }
-            else if (tmp == "deliveryWithin(hrs):") {
+            else if (tmp == "DELIVERYWITHIN(HRS):") {
                 inFile >> deliveryWithin;
             }
-            else if (tmp == "minCapacity(MW):") {
+            else if (tmp == "MINCAPACITY(MW):") {
                 inFile >> minCapacity;
             }
-            else if (tmp == "availabePrice(£/MWh):") {
+            else if (tmp == "AVAILABLEPRICE(£/MWh):") {
                 inFile >> availPrice;
             }
-            else if (tmp == "generationPrice(£/MWh):") {
+            else if (tmp == "GENERATIONPRICE(£/MWh):") {
                 inFile >> genPrice;
             }
-            else if (tmp == "ancillaryDemandFile:") {
+            else if (tmp == "ANCILLARYDEMANDFILE:") {
                 inFile >> tmp;
                 ancDemand = timeSeries(tmp);
             }
             else {
                 string tmp2;
                 inFile >> tmp2;
-                cout << "Invalid parameter [" << tmp << "] = [" << tmp2 << "] in ancilliary file [" << fileName << "] could not be loaded." << endl;
+                cout << "Invalid parameter [" << raw << "] = [" << tmp2 << "] in ancilliary file [" << fileName << "] could not be loaded." << endl;
             }
         }
     }

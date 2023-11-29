@@ -131,13 +131,13 @@ double tidalRangeScheme::flex(double hs, double he, double hpe, const double& Si
       // here it optimises based on the desired parameter
       // if you want to add more, you can copy/use the methods from
       // the existing two, and add them to the if-else tree.
-      if (flexVariable == "profit" || flexVariable == "Profit") {
+      if (flexVariable == "PROFIT") {
         flxProduct += flxPowerOut[i] * energyValue.getLevel(flxT) * flexDt;
       }
-      else if (flexVariable == "energy" || flexVariable == "Energy") {
+      else if (flexVariable == "ENERGY") {
         flxProduct += flxPowerOut[i] * flexDt;
       }
-      else if (flexVariable == "intertidal" || flexVariable == "Intertidal") {
+      else if (flexVariable == "INTERTIDAL") {
         if (flxUpstream < flxMin) {
           flxMin = flxUpstream;
         }
