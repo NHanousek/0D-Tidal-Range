@@ -54,13 +54,13 @@ vector<vector<double>> generate_latin_hypercube(int n, int dimensions);
     // startup
     void startupGA(const string &fileName, gaConfig &cfg)
 {
-
     // first = false;
     ifstream inFile(fileName);
-    string tmp = "NaN";
+    string tmp("NAN"), raw("NaN");
     if (inFile.is_open()) {
         getline(inFile, tmp); // reads the header line.
-        inFile >> tmp;
+        inFile >> raw;
+        tmp = toUpperCase(raw);
         while (tmp != "End" && !inFile.eof()) {
             if (tmp == "End" || tmp == "end" || tmp == "END") {
                 break;
@@ -81,7 +81,7 @@ vector<vector<double>> generate_latin_hypercube(int n, int dimensions);
                 inFile >> cfg.PMUTATION;
             }
             else {
-                cout << "Invalid parameter <" << tmp << "> in [" << fileName << "] ..." << endl;
+                cout << "Invalid parameter <" << raw << "> in [" << fileName << "] ..." << endl;
             }
             inFile >> tmp;
         }

@@ -8,6 +8,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <cctype>
 
 using namespace std;
 //Maths
@@ -198,4 +199,12 @@ double trsRamp(const double& simtime, const double& prevswitchtime, const double
         return 1.0;
     }
 }
+string toUpperCase(const string &input) {
+    string result = input; // Make a copy of the input string
+    for (char &c : result) {
+        c = toupper(c); // Convert each character to uppercase
+    }
+    return result;
+}
+
 #endif

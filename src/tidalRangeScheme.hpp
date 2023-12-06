@@ -215,7 +215,10 @@ int tidalRangeScheme::nextMode(const double& HeadDiff, const double& timeNow, co
 			control = absolute(HeadDiff);
 		}
 	}
-
+	// 1 - Fill/Sluice
+	// 2 - Holding
+	// 3 - Generating
+	// 4 - Pumping
 	if (isPumping) {
 		switch (operation) {
 			case 1: // ebb only
