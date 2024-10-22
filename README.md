@@ -2,12 +2,16 @@
 
 ## 0D Modelling of tidal range schemes.
 
+### References
+
+- N. Hanousek; *Numerical modelling of tidal energy devices and structures as part of net zero*, Ph.D. Thesis, Cardiff University (2023) [URI](https://orca.cardiff.ac.uk/id/eprint/167131)
+- N. Hanousek, R. Ahamdian, E. Lesurf; *Providing distributed electrical generation through retrofitting disused docks as tidal range energy schemes*, Renewable Energy (2023) [DOI](https://doi.org/10.1016/j.renene.2023.119149)
+- T. Zhang, N. Hanousek, M. Qadrdan, R. Ahmadian; *A Day-Ahead Scheduling Model of Power Systems Incorporating Multiple Tidal Range Power Stations*, IEEE Transactions on Sustainable Energy  (2023) [DOI](https://doi.org/10.1109/tste.2022.3224231)
+
 ### Compilation with g++
 The easiest way to compile the model on Mac/Linux, available on Windows as well (other options are available). All source files are in the src/ directory.
 	
 	$g++ -std=c++11 main.cpp -o BarraCUDA.out
-
-(or BarraCUDA.exe on Windows)
 
 ### To Do:
 	- Improve documentation...
